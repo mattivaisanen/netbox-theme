@@ -1,4 +1,4 @@
-<style id="netbox-theme">
+<style id="nbt-theme">
 :root { {{ light_variables }} {{ font_variables }} }
 html[data-bs-theme=dark] { {{ dark_variables }} }
 {% include 'netbox_theme/inc/theme.css' %}
@@ -7,7 +7,7 @@ html[data-bs-theme=dark] { {{ dark_variables }} }
 {% if logo_login_light %}html[data-bs-theme] img.logo.hide-theme-dark { content: url("{{ logo_login_light }}"); }{% endif %}
 {% if logo_login_dark %}html[data-bs-theme] img.logo.hide-theme-light { content: url("{{ logo_login_dark }}"); }{% endif %}
 </style>
-<style id="netbox-theme-edition">{{ edition_css }}</style>
-<style id="netbox-theme-logo-size">{{ logo_size_css }}</style>
-<style id="netbox-theme-custom-colors">{{ custom_color_css }}</style>
-<style id="netbox-theme-fonts">{{ font_faces }}</style>
+<style id="nbt-theme-edition">{{ edition_css }}</style>
+<style id="nbt-theme-logo-size">{{ logo_size_css }}</style>
+<style id="nbt-theme-custom-colors">{{ custom_color_css }}</style>
+<style id="nbt-theme-fonts">{{ font_faces }}</style>

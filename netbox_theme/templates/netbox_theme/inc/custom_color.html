@@ -1,25 +1,25 @@
 {% load i18n %}
-<div class="row g-2 align-items-center mb-2 custom-color">
+<div class="row g-2 align-items-center mb-2 nbt-custom-color">
   <input type="hidden" name="custom_color_slug" value="{{ row.slug|default:'' }}">
   <div class="col-md-3">
-    <div class="custom-color-sample rounded px-2 py-1 text-center fw-bold text-truncate">&nbsp;</div>
+    <div class="nbt-custom-color-sample rounded px-2 py-1 text-center fw-bold text-truncate">&nbsp;</div>
   </div>
   <div class="col-md-4">
     <input type="text" name="custom_color_name" value="{{ row.name|default:'' }}" maxlength="50" required
            class="form-control" placeholder="{% trans "Name" %}" aria-label="{% trans "Name" %}">
   </div>
   <div class="col-auto d-flex align-items-center gap-1">
-    <input type="color" name="custom_color_light" value="{{ row.light|default:'#00857d' }}"
+    <input type="color" name="custom_color_light" value="{{ row.light|default:new_color.light }}"
            class="form-control form-control-color" title="{% trans "Light mode" %}" aria-label="{% trans "Light mode" %}">
     <i class="mdi mdi-white-balance-sunny text-muted" aria-hidden="true"></i>
   </div>
   <div class="col-auto d-flex align-items-center gap-1">
-    <input type="color" name="custom_color_dark" value="{{ row.dark|default:'#00f2d4' }}"
+    <input type="color" name="custom_color_dark" value="{{ row.dark|default:new_color.dark }}"
            class="form-control form-control-color" title="{% trans "Dark mode" %}" aria-label="{% trans "Dark mode" %}">
     <i class="mdi mdi-weather-night text-muted" aria-hidden="true"></i>
   </div>
   <div class="col-auto">
-    <button type="button" class="btn btn-ghost-danger btn-sm custom-color-remove" title="{% trans "Remove" %}" aria-label="{% trans "Remove" %}">
+    <button type="button" class="btn btn-ghost-danger btn-sm nbt-custom-color-remove" title="{% trans "Remove" %}" aria-label="{% trans "Remove" %}">
       <i class="mdi mdi-trash-can-outline" aria-hidden="true"></i>
     </button>
   </div>

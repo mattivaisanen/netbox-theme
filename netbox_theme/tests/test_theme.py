@@ -192,7 +192,7 @@ class PageTests(TestCase):
 
     def test_no_theme_leaves_netbox_alone(self):
         page = self.client.get(reverse('home'))
-        self.assertNotContains(page, 'id="netbox-theme"')
+        self.assertNotContains(page, 'id="nbt-theme"')
 
     def test_admins_only(self):
         self.client.force_login(self.user)
@@ -323,10 +323,10 @@ class PageTests(TestCase):
 
     def test_restore_defaults(self):
         Theme(light={'primary': '#123456'}).save()
-        self.assertContains(self.client.get(reverse('home')), 'id="netbox-theme"')
+        self.assertContains(self.client.get(reverse('home')), 'id="nbt-theme"')
         self.client.post(reverse(URL + 'theme_reset'))
         self.assertFalse(Theme.objects.exists())
-        self.assertNotContains(self.client.get(reverse('home')), 'id="netbox-theme"')
+        self.assertNotContains(self.client.get(reverse('home')), 'id="nbt-theme"')
 
     def test_export_and_import(self):
         Theme(name='Exported', dark={'primary': '#abcdef'}).save()

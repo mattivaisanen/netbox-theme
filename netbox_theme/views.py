@@ -59,6 +59,9 @@ class ThemeView(ThemeAdminMixin, View):
             'presets': [(slug, label) for slug, label, _colors in colors.PRESETS],
             # For the editor's script.
             'preset_colors': {slug: values for slug, _label, values in colors.PRESETS},
+            'editor_config': {'darkText': colors.DARK_TEXT, 'lightText': colors.LIGHT_TEXT, 'aspect': fonts.NETBOX_ASPECT},
+            # A new custom color starts as NetBox's brand color.
+            'new_color': {mode: colors.NETBOX[mode]['primary'] for mode in colors.MODES},
             'import_form': ThemeImportForm(),
             'custom_colors': form.custom_color_rows(),
             'max_custom_colors': custom_colors.MAX_COLORS,

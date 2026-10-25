@@ -1,19 +1,16 @@
 {% load i18n l10n %}
 <div class="card">
-  <div class="card-header d-flex align-items-center">
-    <h2 class="card-title mb-0 flex-fill">{% trans "Fonts" %}</h2>
-    <button type="button" class="btn btn-sm btn-ghost-secondary" data-reset="fonts"
-            title="{% trans "Back to NetBox's defaults for this section (saved when you click Save)" %}">
-      <i class="mdi mdi-restore" aria-hidden="true"></i> {% trans "Reset" %}
-    </button>
-  </div>
+  <h2 class="card-header">
+    {% trans "Fonts" %}
+    {% include 'netbox_theme/inc/reset_button.html' with section='fonts' %}
+  </h2>
   <div class="card-body">
 
     {# What is in use, in words, kept current by the script as the selects change. #}
-    <div class="alert alert-info py-2 mb-3" id="font-status">
+    <div class="alert alert-info py-2 mb-3" id="nbt-font-status">
       <strong>{% trans "In use" %}:</strong>
       {% for role, label, chosen, sources, slots in font_roles %}
-        <span class="ms-2 text-nowrap">{{ label }}: <strong data-font-status="{{ role }}"></strong></span>
+        <span class="ms-2 text-nowrap">{{ label }}: <strong data-nbt-font-status="{{ role }}"></strong></span>
       {% endfor %}
     </div>
 
@@ -22,17 +19,17 @@
         <div class="col-lg-4">
           <label class="form-label h4" for="typography_{{ role }}_family">{{ label }}</label>
           <select name="typography_{{ role }}_family" id="typography_{{ role }}_family" class="form-select mb-2"
-                  data-font-var="--nbt-font-{{ role }}" data-font-role="{{ role }}"
-                  data-netbox="{% if role == 'body' %}Inter, system-ui, sans-serif{% elif role == 'mono' %}&quot;Roboto Mono&quot;{% else %}inherit{% endif %}">
+                  data-nbt-font-var="--nbt-font-{{ role }}" data-nbt-font-role="{{ role }}"
+                  data-nbt-netbox="{% if role == 'body' %}Inter, system-ui, sans-serif{% elif role == 'mono' %}&quot;Roboto Mono&quot;{% else %}inherit{% endif %}">
             {% for source, source_label, stack in sources %}
-              <option value="{{ source }}" data-stack="{{ stack }}"{% if source == chosen %} selected{% endif %}>{{ source_label }}</option>
+              <option value="{{ source }}" data-nbt-stack="{{ stack }}"{% if source == chosen %} selected{% endif %}>{{ source_label }}</option>
             {% endfor %}
           </select>
           <div class="border rounded mb-2">
             {% for slot, slot_label, file, weight, style in slots %}
-              <div class="d-flex align-items-center gap-2 px-2 py-1 font-slot{% if not forloop.last %} border-bottom{% endif %}">
+              <div class="d-flex align-items-center gap-2 px-2 py-1 nbt-font-slot{% if not forloop.last %} border-bottom{% endif %}">
                 <span class="text-muted small flex-shrink-0" style="width: 4.5rem">{{ slot_label }}</span>
-                <span class="flex-fill text-truncate font-slot-name" title="{{ file.filename|default:'' }}"
+                <span class="flex-fill text-truncate nbt-font-slot-name" title="{{ file.filename|default:'' }}"
                       {% if file %}style="font-family: 'nbt-{{ role }}'; font-weight: {{ weight }}; font-style: {{ style }}"{% endif %}>
                   {% if file %}{{ file.detected }}{% elif forloop.first %}<span class="text-muted small">{% trans "Not set" %}</span>{% else %}<span class="text-muted small">{% trans "From Regular" %}</span>{% endif %}
                 </span>
@@ -85,7 +82,7 @@
           <div class="input-group">
             <input type="number" name="typography_base_size" id="typography_base_size" class="form-control"
                    value="{{ typography.base_size|unlocalize }}" min="11" max="20" step="any"
-                   data-font-var="--nbt-font-size" data-scale="16" data-suffix="rem" data-netbox=".875rem" data-default="14">
+                   data-nbt-font-var="--nbt-font-size" data-nbt-scale="16" data-nbt-suffix="rem" data-nbt-netbox=".875rem" data-nbt-default="14">
             <span class="input-group-text">px</span>
           </div>
         </div>
@@ -93,14 +90,14 @@
           <label class="form-label" for="typography_line_height">{% trans "Line height" %}</label>
           <input type="number" name="typography_line_height" id="typography_line_height" class="form-control"
                  value="{{ typography.line_height|unlocalize }}" min="1" max="2.2" step="any"
-                 data-font-var="--nbt-line-height" data-netbox="1.4285714286" data-default="1.43">
+                 data-nbt-font-var="--nbt-line-height" data-nbt-netbox="1.4285714286" data-nbt-default="1.43">
         </div>
       </div>
       <div class="row g-2 mb-2">
         <div class="col-6 col-md-4">
           <label class="form-label" for="typography_headings_weight">{% trans "Heading weight" %}</label>
           <select name="typography_headings_weight" id="typography_headings_weight" class="form-select"
-                  data-font-var="--nbt-headings-weight" data-netbox="var(--tblr-font-weight-bold)" data-default="600">
+                  data-nbt-font-var="--nbt-headings-weight" data-nbt-netbox="var(--tblr-font-weight-bold)" data-nbt-default="600">
             {% for weight in font_weights %}
               <option value="{{ weight }}"{% if weight == typography.headings_weight %} selected{% endif %}>{{ weight }}</option>
             {% endfor %}
@@ -113,7 +110,7 @@
           <div class="input-group">
             <input type="number" name="typography_letter_spacing" id="typography_letter_spacing" class="form-control"
                    value="{{ typography.letter_spacing|unlocalize }}" min="-0.05" max="0.2" step="any"
-                   data-font-var="--nbt-letter-spacing" data-suffix="em" data-netbox="normal" data-default="0">
+                   data-nbt-font-var="--nbt-letter-spacing" data-nbt-suffix="em" data-nbt-netbox="normal" data-nbt-default="0">
             <span class="input-group-text">em</span>
           </div>
         </div>
@@ -122,14 +119,14 @@
           <div class="input-group">
             <input type="number" name="typography_headings_letter_spacing" id="typography_headings_letter_spacing"
                    class="form-control" value="{{ typography.headings_letter_spacing|unlocalize }}" min="-0.05" max="0.3" step="any"
-                   data-font-var="--nbt-headings-letter-spacing" data-suffix="em" data-netbox="inherit" data-default="0">
+                   data-nbt-font-var="--nbt-headings-letter-spacing" data-nbt-suffix="em" data-nbt-netbox="inherit" data-nbt-default="0">
             <span class="input-group-text">em</span>
           </div>
         </div>
         <div class="col-6 col-md-4">
           <label class="form-label" for="typography_headings_case">{% trans "Heading case" %}</label>
           <select name="typography_headings_case" id="typography_headings_case" class="form-select"
-                  data-font-var="--nbt-headings-case" data-netbox="inherit" data-default="none">
+                  data-nbt-font-var="--nbt-headings-case" data-nbt-netbox="inherit" data-nbt-default="none">
             <option value="none"{% if typography.headings_case == 'none' %} selected{% endif %}>{% trans "As written" %}</option>
             <option value="uppercase"{% if typography.headings_case == 'uppercase' %} selected{% endif %}>{% trans "Uppercase" %}</option>
           </select>
@@ -146,7 +143,7 @@
       <label class="form-check">
         <input type="checkbox" name="typography_tabular_numbers" value="on" class="form-check-input"
                {% if typography.tabular_numbers %}checked{% endif %}
-               data-font-var="--nbt-numbers" data-on="tabular-nums" data-netbox="normal">
+               data-nbt-font-var="--nbt-numbers" data-nbt-on="tabular-nums" data-nbt-netbox="normal">
         <span class="form-check-label">{% trans "Tabular numbers" %}</span>
         <span class="form-text d-block">{% trans "Every digit equally wide, so IP addresses, VLAN IDs and counts line up in columns." %}</span>
       </label>

@@ -1,5 +1,5 @@
 """
-A global color scheme and logo for NetBox's web UI.
+Colors, logos and fonts for NetBox's web UI, set by admins for every user.
 
 Admins pick a preset or set each color for light and dark mode under
 *Plugins → Theme*, with a live preview, and upload a logo. The theme is one
@@ -13,7 +13,7 @@ from netbox.plugins import PluginConfig
 class ThemeConfig(PluginConfig):
     name = 'netbox_theme'
     verbose_name = 'Theme'
-    description = 'A global color scheme and logo for NetBox.'
+    description = "Colors, logos and fonts for NetBox's web UI, set by admins for every user."
     version = '0.1.0'
     author = 'Matti'
     base_url = 'theme'

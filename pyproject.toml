@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "netbox-theme"
 version = "0.1.0"
-description = "A global color scheme and logo for NetBox."
+description = "Colors, logos and fonts for NetBox's web UI, set by admins for every user."
 requires-python = ">=3.10"
 license = "Apache-2.0"
 readme = "README.md"

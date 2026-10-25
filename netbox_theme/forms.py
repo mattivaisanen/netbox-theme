@@ -59,7 +59,7 @@ class ThemeForm(forms.Form):
                         label=label, max_length=7, validators=[hex_color],
                         widget=forms.TextInput(attrs={
                             'type': 'color', 'class': 'form-control form-control-color',
-                            'data-theme-token': token, 'data-theme-mode': mode,
+                            'data-nbt-token': token, 'data-nbt-mode': mode,
                         }),
                     )
 

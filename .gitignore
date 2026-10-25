@@ -9,6 +9,7 @@ venv/
 .coverage
 dump.rdb
 
-# Claude Code session files
+# Claude Code files
 .claude/
+CLAUDE.md
 CLAUDE.local.md

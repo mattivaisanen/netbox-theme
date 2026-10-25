@@ -1,0 +1,7 @@
+{% load i18n %}
+<div class="card-actions">
+  <button type="button" class="btn btn-sm btn-ghost-secondary" data-nbt-reset="{{ section }}"
+          title="{% trans "Back to NetBox's defaults for this section (saved when you click Save)" %}">
+    <i class="mdi mdi-restore" aria-hidden="true"></i> {% trans "Reset" %}
+  </button>
+</div>

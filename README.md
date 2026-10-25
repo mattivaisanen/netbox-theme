@@ -1,8 +1,8 @@
 # netbox-theme
 
-A NetBox plugin that gives NetBox your organisation's colors and logo, for
-every user, in light and dark mode. Admins edit the theme in the web UI with
-a live preview; nothing needs a restart.
+A NetBox plugin that gives NetBox your organization's colors, logos and
+fonts, for every user, in light and dark mode. Admins edit the theme in the
+web UI with a live preview; nothing needs a restart.
 
 ## What it does
 
@@ -59,10 +59,10 @@ a live preview; nothing needs a restart.
 
 ## Requirements
 
-- NetBox **4.7** or later. Tested with NetBox 4.7.3.
+- NetBox **4.7** or later. Tested with NetBox 4.7.0 and 4.7.3.
 - No other NetBox plugins.
 
-## Install
+## Installation
 
 ```bash
 pip install git+https://github.com/mattivaisanen/netbox-theme.git
@@ -81,6 +81,16 @@ python manage.py migrate
 Settings and permissions: [docs/configuration.md](docs/configuration.md).
 How it works inside: [DEVELOPER.md](DEVELOPER.md).
 
+### Upgrading
+
+```bash
+pip install --upgrade git+https://github.com/mattivaisanen/netbox-theme.git
+python manage.py migrate
+```
+
+Then restart NetBox. Check [CHANGELOG.md](CHANGELOG.md) for anything a
+release asks you to do.
+
 ## License
 
-Apache-2.0.
+Apache License 2.0, see [LICENSE](LICENSE).
