@@ -1,0 +1,12 @@
+<style id="netbox-theme">
+:root { {{ light_variables }} }
+html[data-bs-theme=dark] { {{ dark_variables }} }
+{% include 'netbox_theme/inc/theme.css' %}
+{% if logo_light %}html[data-bs-theme] .navbar-brand-image.hide-theme-dark { content: url("{{ logo_light }}"); }{% endif %}
+{% if logo_dark %}html[data-bs-theme] .navbar-brand-image.hide-theme-light { content: url("{{ logo_dark }}"); }{% endif %}
+{% if logo_login_light %}html[data-bs-theme] img.logo.hide-theme-dark { content: url("{{ logo_login_light }}"); }{% endif %}
+{% if logo_login_dark %}html[data-bs-theme] img.logo.hide-theme-light { content: url("{{ logo_login_dark }}"); }{% endif %}
+</style>
+<style id="netbox-theme-edition">{{ edition_css }}</style>
+<style id="netbox-theme-logo-size">{{ logo_size_css }}</style>
+<style id="netbox-theme-custom-colors">{{ custom_color_css }}</style>

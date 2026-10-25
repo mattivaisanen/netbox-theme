@@ -1,0 +1,431 @@
+{% extends 'generic/_base.html' %}
+{% load i18n %}
+
+{% block title %}{% trans "Theme" %}{% endblock %}
+
+{% block head %}
+  {# The colors being edited, so the page shows them before the script runs (and with no saved theme). #}
+  {% include 'netbox_theme/inc/head.html' %}
+  <style>
+    .theme-color .form-control-color { width: 2.5rem; padding: .2rem; flex: none; }
+    .theme-color .theme-hex { width: 6.5rem; flex: none; }
+    .theme-logo-preview { height: 2rem; max-width: 100%; }
+  </style>
+{% endblock %}
+
+{% block controls %}
+  <div class="btn-list">
+    <a href="{% url 'plugins:netbox_theme:theme_export' %}" class="btn btn-outline-secondary">
+      <i class="mdi mdi-download" aria-hidden="true"></i> {% trans "Export" %}
+    </a>
+    <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#theme-import">
+      <i class="mdi mdi-upload" aria-hidden="true"></i> {% trans "Import" %}
+    </button>
+    {% trans "Restore NetBox's default colors and logo? The saved theme is deleted; export it first to keep it." as confirm_text %}
+    <form method="post" action="{% url 'plugins:netbox_theme:theme_reset' %}" class="d-inline"
+          onsubmit="return confirm('{{ confirm_text|escapejs }}');">
+      {% csrf_token %}
+      <button type="submit" class="btn btn-outline-danger"{% if not theme %} disabled title="{% trans "NetBox defaults are in use" %}"{% endif %}>
+        <i class="mdi mdi-restore" aria-hidden="true"></i> {% trans "Restore NetBox defaults" %}
+      </button>
+    </form>
+  </div>
+{% endblock %}
+
+{% block content %}
+<form method="post" enctype="multipart/form-data" id="theme-form">
+  {% csrf_token %}
+
+  {% if form.errors %}
+    <div class="alert alert-danger">
+      {% trans "The theme was not saved. Fix the fields marked below." %}
+      {% for error in form.non_field_errors %}<div>{{ error }}</div>{% endfor %}
+    </div>
+  {% endif %}
+
+  <div class="card">
+    <div class="card-body">
+      <div class="row g-3 align-items-end">
+        <div class="col-md-4">
+          <label class="form-label" for="theme-preset">{% trans "Preset" %}</label>
+          <select id="theme-preset" class="form-select">
+            <option value="">{% trans "Choose a preset" %}</option>
+            {% for slug, label in presets %}
+              <option value="{{ slug }}">{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label" for="{{ form.name.id_for_label }}">{{ form.name.label }}</label>
+          <input type="text" name="{{ form.name.html_name }}" id="{{ form.name.id_for_label }}"
+                 value="{{ form.name.value|default_if_none:'' }}" maxlength="100" class="form-control" required>
+          {% for error in form.name.errors %}<div class="text-danger">{{ error }}</div>{% endfor %}
+        </div>
+        <div class="col-md-4">
+          <span class="form-label d-block">{% trans "Preview" %}</span>
+          <div class="btn-group" role="group">
+            <button type="button" class="btn btn-outline-secondary" data-preview-mode="light">
+              <i class="mdi mdi-white-balance-sunny" aria-hidden="true"></i> {% trans "Light" %}
+            </button>
+            <button type="button" class="btn btn-outline-secondary" data-preview-mode="dark">
+              <i class="mdi mdi-weather-night" aria-hidden="true"></i> {% trans "Dark" %}
+            </button>
+          </div>
+        </div>
+      </div>
+      <div class="form-text mt-2">
+        {% trans "Changes show on this page right away. Everyone else sees them after you save." %}
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+    {% for mode, groups in columns %}
+      <div class="col-xl-6">
+        <div class="card">
+          <h2 class="card-header">
+            {% if mode == 'light' %}{% trans "Light mode" %}{% else %}{% trans "Dark mode" %}{% endif %}
+          </h2>
+          <div class="card-body">
+            {% for group, label, fields in groups %}
+              <h3 class="h4 {% if not forloop.first %}pt-2 border-top{% endif %}">{{ label }}</h3>
+              <div class="row g-2 mb-3">
+                {% for field in fields %}
+                  <div class="col-sm-6">
+                    <div class="d-flex align-items-center gap-2 theme-color">
+                      {{ field }}
+                      <input type="text" class="form-control form-control-sm font-monospace theme-hex"
+                             value="{{ field.value|default_if_none:'' }}" maxlength="7" spellcheck="false"
+                             aria-label="{{ field.label }}">
+                      <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                    </div>
+                    {% for error in field.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                  </div>
+                {% endfor %}
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+
+  <div class="row">
+    <div class="col-xl-6">
+      <div class="card">
+        <h2 class="card-header">{% trans "Logo and label" %}</h2>
+        <div class="card-body">
+          <h3 class="h4">{% trans "Sidebar" %}</h3>
+          {% for slot, upload, clear, url in logos %}{% if 'login' not in slot %}
+            {% include 'netbox_theme/inc/logo_upload.html' %}
+          {% endif %}{% endfor %}
+          <div class="row g-2 mb-3">
+            {% for field in logo_size %}
+              <div class="col-4">
+                <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                <div class="input-group">
+                  <input type="number" name="{{ field.html_name }}" id="{{ field.id_for_label }}" class="form-control"
+                         value="{{ field.value|default_if_none:'' }}" min="{{ field.field.min_value }}"
+                         max="{{ field.field.max_value }}" required data-logo-size>
+                  <span class="input-group-text">px</span>
+                </div>
+                {% for error in field.errors %}<div class="text-danger">{{ error }}</div>{% endfor %}
+              </div>
+            {% endfor %}
+          </div>
+          <h3 class="h4 pt-3 border-top">{% trans "Login page" %}</h3>
+          {% for slot, upload, clear, url in logos %}{% if 'login' in slot %}
+            {% include 'netbox_theme/inc/logo_upload.html' %}
+          {% endif %}{% endfor %}
+          <div class="form-text mb-3">
+            {% trans "SVG, PNG, JPEG, GIF or WebP. Without a logo, NetBox's own is shown." %}
+          </div>
+          <div class="row g-2 pt-3 border-top">
+            <div class="col-sm-5">
+              <label class="form-label" for="{{ form.edition.id_for_label }}">{{ form.edition.label }}</label>
+              <select name="{{ form.edition.html_name }}" id="{{ form.edition.id_for_label }}" class="form-select">
+                {% for value, label in form.edition.field.choices %}
+                  <option value="{{ value }}"{% if form.edition.value == value %} selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-sm-7">
+              <label class="form-label" for="{{ form.edition_text.id_for_label }}">{{ form.edition_text.label }}</label>
+              <input type="text" name="{{ form.edition_text.html_name }}" id="{{ form.edition_text.id_for_label }}"
+                     value="{{ form.edition_text.value|default_if_none:'' }}" maxlength="50" class="form-control">
+              {% for error in form.edition_text.errors %}<div class="text-danger">{{ error }}</div>{% endfor %}
+            </div>
+            <div class="form-text mt-1">{{ form.edition.help_text }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-xl-6">
+      <div class="card">
+        <h2 class="card-header">{% trans "Sample" %}</h2>
+        <div class="card-body">
+          <div class="btn-list mb-3">
+            <button type="button" class="btn btn-primary">{% trans "Primary" %}</button>
+            <button type="button" class="btn btn-secondary">{% trans "Secondary" %}</button>
+            <button type="button" class="btn btn-success">{% trans "Success" %}</button>
+            <button type="button" class="btn btn-warning">{% trans "Warning" %}</button>
+            <button type="button" class="btn btn-danger">{% trans "Danger" %}</button>
+            <button type="button" class="btn btn-outline-primary">{% trans "Outline" %}</button>
+          </div>
+          <div class="mb-3">
+            {% for color in status_colors %}
+              <span class="badge text-bg-{{ color }}">{{ color }}</span>
+            {% endfor %}
+          </div>
+          <div class="alert alert-info" role="alert">{% trans "An info message with" %} <a href="#">{% trans "a link" %}</a>.</div>
+          <table class="table table-hover attr-table mb-3">
+            <thead><tr><th>{% trans "Name" %}</th><th>{% trans "Status" %}</th></tr></thead>
+            <tbody>
+              <tr><td><a href="#">switch-01</a></td><td><span class="badge text-bg-green">{% trans "Active" %}</span></td></tr>
+              <tr><td><a href="#">switch-02</a></td><td><span class="badge text-bg-yellow">{% trans "Planned" %}</span></td></tr>
+            </tbody>
+          </table>
+          <p class="text-muted mb-0">{% trans "Muted text, as in help texts and empty fields." %}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2 class="card-header">{% trans "Custom colors" %}</h2>
+    <div class="card-body">
+      <p class="form-text mt-0">
+        {% trans "Your own named colors, each with a light and a dark mode value. Dashboard widgets list them under Theme in their Color, next to NetBox's own; status colors below can use them too (after saving). Text on them turns dark or white to stay readable." %}
+      </p>
+      <div id="custom-colors">
+        {% for row in custom_colors %}
+          {% include 'netbox_theme/inc/custom_color.html' %}
+        {% endfor %}
+      </div>
+      <template id="custom-color-template">
+        {% include 'netbox_theme/inc/custom_color.html' with row=None %}
+      </template>
+      <button type="button" class="btn btn-outline-primary" id="custom-color-add">
+        <i class="mdi mdi-plus-thick" aria-hidden="true"></i> {% trans "Add color" %}
+      </button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2 class="card-header">{% trans "Status colors" %}</h2>
+    <div class="card-body">
+      <p class="form-text mt-0">
+        {% trans "The badge color of each status on every object type (devices, prefixes, VLANs, plugins...). NetBox's keeps NetBox's own, which can differ by type." %}
+      </p>
+      <div class="row g-2">
+        {% for value, label, chosen, default in status_rows %}
+          <div class="col-md-6 col-xxl-4 d-flex align-items-center gap-2 status-color">
+            <span class="badge text-bg-{{ chosen|default:default }} status-color-sample" data-default="{{ default }}"
+                  style="min-width: 7rem">{{ label }}</span>
+            <select name="status_color_{{ value }}" class="form-select form-select-sm" aria-label="{{ label }}">
+              <option value="">{% trans "NetBox's" %} ({{ default }})</option>
+              {% for color in netbox_colors %}
+                <option value="{{ color }}"{% if chosen == color %} selected{% endif %}>{{ color|capfirst }}</option>
+              {% endfor %}
+              {% if custom_color_options %}
+                <optgroup label="{% trans "Custom" %}">
+                  {% for entry in custom_color_options %}
+                    {% with key='nbt-'|add:entry.slug %}
+                      <option value="{{ key }}"{% if chosen == key %} selected{% endif %}>{{ entry.name }}</option>
+                    {% endwith %}
+                  {% endfor %}
+                </optgroup>
+              {% endif %}
+            </select>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <div class="text-end mb-3">
+    <button type="submit" class="btn btn-primary">
+      <i class="mdi mdi-content-save" aria-hidden="true"></i> {% trans "Save" %}
+    </button>
+  </div>
+</form>
+
+<div class="modal fade" id="theme-import" tabindex="-1" aria-labelledby="theme-import-title" aria-hidden="true">
+  <div class="modal-dialog">
+    <form method="post" action="{% url 'plugins:netbox_theme:theme_import' %}" enctype="multipart/form-data" class="modal-content">
+      {% csrf_token %}
+      <div class="modal-header">
+        <h5 class="modal-title" id="theme-import-title">{% trans "Import theme" %}</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{% trans "Close" %}"></button>
+      </div>
+      <div class="modal-body">
+        <input type="file" name="{{ import_form.file.html_name }}" class="form-control" accept=".json,application/json" required>
+        <div class="form-text">{% trans "A file from Export. It replaces the saved colors and logos." %}</div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">{% trans "Cancel" %}</button>
+        <button type="submit" class="btn btn-primary">{% trans "Import" %}</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+{{ preset_colors|json_script:"theme-presets" }}
+<script>
+  (function () {
+    var root = document.documentElement;
+    var presets = JSON.parse(document.getElementById('theme-presets').textContent);
+    var inputs = document.querySelectorAll('input[data-theme-token]');
+    var HEX = /^#[0-9a-fA-F]{6}$/;
+
+    function rgb(hex) {
+      return [1, 3, 5].map(function (i) { return parseInt(hex.substr(i, 2), 16); }).join(', ');
+    }
+    // Same as colors.readable_text().
+    function readableText(hex) {
+      var l = [1, 3, 5].map(function (i) {
+        var c = parseInt(hex.substr(i, 2), 16) / 255;
+        return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+      });
+      var luminance = 0.2126 * l[0] + 0.7152 * l[1] + 0.0722 * l[2];
+      return (luminance + 0.05) / 0.0603 > 1.05 / (luminance + 0.05) ? '#111827' : '#ffffff';
+    }
+    function currentMode() {
+      return root.getAttribute('data-bs-theme') === 'dark' ? 'dark' : 'light';
+    }
+    function hexBox(input) {
+      return input.parentNode.querySelector('.theme-hex');
+    }
+
+    // Draw the page in the current mode's colors (inline on <html>, above any saved theme).
+    function apply() {
+      var mode = currentMode();
+      inputs.forEach(function (input) {
+        if (input.dataset.themeMode !== mode) { return; }
+        var name = '--nbt-' + input.dataset.themeToken.replace(/_/g, '-');
+        root.style.setProperty(name, input.value);
+        root.style.setProperty(name + '-rgb', rgb(input.value));
+        root.style.setProperty(name + '-on', readableText(input.value));
+      });
+    }
+
+    inputs.forEach(function (input) {
+      var box = hexBox(input);
+      input.addEventListener('input', function () { box.value = input.value; box.classList.remove('is-invalid'); apply(); });
+      box.addEventListener('input', function () {
+        var value = box.value.trim();
+        if (value && value[0] !== '#') { value = '#' + value; }
+        var ok = HEX.test(value);
+        box.classList.toggle('is-invalid', !ok);
+        if (ok) { input.value = value.toLowerCase(); apply(); }
+      });
+    });
+
+    document.getElementById('theme-preset').addEventListener('change', function () {
+      var preset = presets[this.value];
+      if (!preset) { return; }
+      inputs.forEach(function (input) {
+        var value = preset[input.dataset.themeMode][input.dataset.themeToken];
+        if (value) { input.value = value; hexBox(input).value = value; hexBox(input).classList.remove('is-invalid'); }
+      });
+      document.getElementById('{{ form.name.id_for_label }}').value = this.options[this.selectedIndex].text;
+      apply();
+    });
+
+    // Preview a mode without changing the user's own choice (NetBox's switch stores it).
+    document.querySelectorAll('[data-preview-mode]').forEach(function (button) {
+      button.addEventListener('click', function () { root.setAttribute('data-bs-theme', button.dataset.previewMode); });
+    });
+    new MutationObserver(apply).observe(root, { attributes: true, attributeFilter: ['data-bs-theme'] });
+
+    // Show a chosen logo in the sidebar before it is saved.
+    var logoStyle = document.createElement('style');
+    document.head.appendChild(logoStyle);
+    var chosen = {};
+    var savedDark = {{ theme.logo_dark|yesno:"true,false" }};
+    document.querySelectorAll('input[data-logo-mode]').forEach(function (input) {
+      input.addEventListener('change', function () {
+        chosen[input.dataset.logoMode] = input.files[0] ? URL.createObjectURL(input.files[0]) : null;
+        var css = '';
+        if (chosen.light) { css += 'html[data-bs-theme] .navbar-brand-image.hide-theme-dark { content: url("' + chosen.light + '"); }'; }
+        if (chosen.dark || (chosen.light && !savedDark)) { css += 'html[data-bs-theme] .navbar-brand-image.hide-theme-light { content: url("' + (chosen.dark || chosen.light) + '"); }'; }
+        logoStyle.textContent = css;
+      });
+    });
+
+    // Edition label: same CSS as template_content.edition_css().
+    var edition = document.getElementById('{{ form.edition.id_for_label }}');
+    var editionText = document.getElementById('{{ form.edition_text.id_for_label }}');
+    function cssString(text) {
+      return '"' + Array.from(text).map(function (c) {
+        return /[\p{L}\p{N}]/u.test(c) ? c : '\\' + c.codePointAt(0).toString(16).padStart(6, '0');
+      }).join('') + '"';
+    }
+    function applyEdition() {
+      var css = '';
+      editionText.disabled = edition.value !== 'custom';
+      if (edition.value === 'hidden') {
+        css = 'html[data-bs-theme] .netbox-edition { display: none !important; }';
+      } else if (edition.value === 'custom' && editionText.value.trim()) {
+        css = 'html[data-bs-theme] .netbox-edition { font-size: 0 !important; letter-spacing: normal; }' +
+          ' html[data-bs-theme] .netbox-edition::after { content: ' + cssString(editionText.value.trim()) + '; font-size: .875rem; }' +
+          ' html[data-bs-theme] .navbar-brand .netbox-edition::after { font-size: .75rem; }';
+      }
+      document.getElementById('netbox-theme-edition').textContent = css;
+    }
+    edition.addEventListener('change', applyEdition);
+    editionText.addEventListener('input', applyEdition);
+
+    // Logo height and spacing: same CSS as css.logo_size().
+    var sizes = document.querySelectorAll('input[data-logo-size]');
+    function applyLogoSize() {
+      var v = Array.from(sizes).map(function (input) { return parseInt(input.value, 10); });
+      if (v.some(isNaN)) { return; }
+      document.getElementById('netbox-theme-logo-size').textContent =
+        'html[data-bs-theme] .navbar-brand-image { height: ' + v[0] + 'px; }' +
+        ' @media (min-width: 992px) { html[data-bs-theme] .navbar-vertical.navbar-expand-lg .navbar-brand' +
+        ' { padding-top: ' + v[1] + 'px !important; padding-bottom: ' + v[2] + 'px !important; } }';
+    }
+    sizes.forEach(function (input) { input.addEventListener('input', applyLogoSize); });
+
+    // Widget colors: add and remove rows; each row's sample header follows the current mode.
+    var rows = document.getElementById('custom-colors');
+    function drawSamples() {
+      var mode = currentMode();
+      rows.querySelectorAll('.custom-color').forEach(function (row) {
+        var color = row.querySelector('[name=custom_color_' + mode + ']').value;
+        var sample = row.querySelector('.custom-color-sample');
+        sample.style.backgroundColor = color;
+        sample.style.color = readableText(color);
+        sample.textContent = row.querySelector('[name=custom_color_name]').value || '\u00a0';
+      });
+    }
+    function wire(row) {
+      row.querySelectorAll('input').forEach(function (input) { input.addEventListener('input', drawSamples); });
+      row.querySelector('.custom-color-remove').addEventListener('click', function () { row.remove(); });
+    }
+    rows.querySelectorAll('.custom-color').forEach(wire);
+    document.getElementById('custom-color-add').addEventListener('click', function () {
+      var row = document.getElementById('custom-color-template').content.firstElementChild.cloneNode(true);
+      rows.appendChild(row);
+      wire(row);
+      drawSamples();
+      row.querySelector('[name=custom_color_name]').focus();
+    });
+    new MutationObserver(drawSamples).observe(root, { attributes: true, attributeFilter: ['data-bs-theme'] });
+
+    // Status colors: the sample badge shows the chosen color.
+    document.querySelectorAll('.status-color select').forEach(function (select) {
+      select.addEventListener('change', function () {
+        var sample = select.parentNode.querySelector('.status-color-sample');
+        sample.className = 'badge status-color-sample text-bg-' + (select.value || sample.dataset.default);
+      });
+    });
+
+    apply();
+    applyEdition();
+    drawSamples();
+  })();
+</script>
+{% endblock %}

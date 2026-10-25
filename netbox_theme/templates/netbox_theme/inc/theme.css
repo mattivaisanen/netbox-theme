@@ -1,0 +1,128 @@
+{% comment %}
+Maps the theme's --nbt-* variables (colors.css_variables) onto NetBox's own CSS.
+   Light mode values sit on :root, dark mode values on html[data-bs-theme=dark],
+   so var(--nbt-x) here resolves to the current mode's color. Selectors start
+   with html[data-bs-theme] to win over netbox.css's own mode rules.
+{% endcomment %}
+html[data-bs-theme] {
+  /* Accent and status colors. Lighter and darker shades are mixed with the
+     page background and text, so they suit either mode. */
+  --tblr-primary: var(--nbt-primary);
+  --tblr-primary-rgb: var(--nbt-primary-rgb);
+  --tblr-primary-text-emphasis: color-mix(in srgb, var(--nbt-primary) 60%, var(--nbt-text));
+  --tblr-primary-bg-subtle: color-mix(in srgb, var(--nbt-primary) 20%, var(--nbt-body-bg));
+  --tblr-primary-border-subtle: color-mix(in srgb, var(--nbt-primary) 40%, var(--nbt-body-bg));
+  --tblr-secondary: var(--nbt-secondary);
+  --tblr-secondary-rgb: var(--nbt-secondary-rgb);
+  --tblr-secondary-text-emphasis: color-mix(in srgb, var(--nbt-secondary) 60%, var(--nbt-text));
+  --tblr-secondary-bg-subtle: color-mix(in srgb, var(--nbt-secondary) 20%, var(--nbt-body-bg));
+  --tblr-secondary-border-subtle: color-mix(in srgb, var(--nbt-secondary) 40%, var(--nbt-body-bg));
+  --tblr-success: var(--nbt-success);
+  --tblr-success-rgb: var(--nbt-success-rgb);
+  --tblr-success-text-emphasis: color-mix(in srgb, var(--nbt-success) 60%, var(--nbt-text));
+  --tblr-success-bg-subtle: color-mix(in srgb, var(--nbt-success) 20%, var(--nbt-body-bg));
+  --tblr-success-border-subtle: color-mix(in srgb, var(--nbt-success) 40%, var(--nbt-body-bg));
+  --tblr-info: var(--nbt-info);
+  --tblr-info-rgb: var(--nbt-info-rgb);
+  --tblr-info-text-emphasis: color-mix(in srgb, var(--nbt-info) 60%, var(--nbt-text));
+  --tblr-info-bg-subtle: color-mix(in srgb, var(--nbt-info) 20%, var(--nbt-body-bg));
+  --tblr-info-border-subtle: color-mix(in srgb, var(--nbt-info) 40%, var(--nbt-body-bg));
+  --tblr-warning: var(--nbt-warning);
+  --tblr-warning-rgb: var(--nbt-warning-rgb);
+  --tblr-warning-text-emphasis: color-mix(in srgb, var(--nbt-warning) 60%, var(--nbt-text));
+  --tblr-warning-bg-subtle: color-mix(in srgb, var(--nbt-warning) 20%, var(--nbt-body-bg));
+  --tblr-warning-border-subtle: color-mix(in srgb, var(--nbt-warning) 40%, var(--nbt-body-bg));
+  --tblr-danger: var(--nbt-danger);
+  --tblr-danger-rgb: var(--nbt-danger-rgb);
+  --tblr-danger-text-emphasis: color-mix(in srgb, var(--nbt-danger) 60%, var(--nbt-text));
+  --tblr-danger-bg-subtle: color-mix(in srgb, var(--nbt-danger) 20%, var(--nbt-body-bg));
+  --tblr-danger-border-subtle: color-mix(in srgb, var(--nbt-danger) 40%, var(--nbt-body-bg));
+  --tblr-brand: var(--nbt-primary);
+  --tblr-primary-fg: var(--nbt-primary-fg);
+  --tblr-btn-active-color: var(--nbt-primary-fg);
+  --tblr-form-valid-color: var(--nbt-success);
+  --tblr-form-valid-border-color: var(--nbt-success);
+  --tblr-form-invalid-color: var(--nbt-danger);
+  --tblr-form-invalid-border-color: var(--nbt-danger);
+
+  /* Links */
+  --tblr-link-color: var(--nbt-link);
+  --tblr-link-color-rgb: var(--nbt-link-rgb);
+  --tblr-link-hover-color: color-mix(in srgb, var(--nbt-link) 75%, var(--nbt-text));
+  --tblr-link-hover-color-rgb: var(--nbt-link-rgb);
+
+  /* Page */
+  --tblr-body-bg: var(--nbt-body-bg);
+  --tblr-body-bg-rgb: var(--nbt-body-bg-rgb);
+  --tblr-bg-surface-secondary: var(--nbt-body-bg);
+  --tblr-bg-surface-tertiary: var(--nbt-body-bg);
+  --tblr-bg-surface: var(--nbt-surface);
+  --tblr-bg-surface-primary: var(--nbt-surface);
+  --tblr-secondary-bg: color-mix(in srgb, var(--nbt-text) 8%, var(--nbt-body-bg));
+  --tblr-tertiary-bg: color-mix(in srgb, var(--nbt-text) 4%, var(--nbt-body-bg));
+  --tblr-body-color: var(--nbt-text);
+  --tblr-body-color-rgb: var(--nbt-text-rgb);
+  --tblr-emphasis-color: var(--nbt-text);
+  --tblr-muted: var(--nbt-muted);
+  --tblr-muted-rgb: var(--nbt-muted-rgb);
+  --tblr-secondary-color: var(--nbt-muted);
+  --tblr-tertiary-color: color-mix(in srgb, var(--nbt-muted) 70%, var(--nbt-body-bg));
+  --tblr-border-color: var(--nbt-border);
+  --tblr-border-color-translucent: color-mix(in srgb, var(--nbt-border) 70%, transparent);
+  --tblr-active-bg: rgba(var(--nbt-primary-rgb), .06);
+}
+html[data-bs-theme] { --tblr-bg-forms: var(--nbt-input-bg); }
+
+/* Places netbox.css colors directly instead of through a variable. */
+html[data-bs-theme] { background-color: var(--nbt-body-bg); }
+html[data-bs-theme] .page,
+html[data-bs-theme] .page-tabs .nav-tabs .nav-link.active { background-color: var(--nbt-body-bg) !important; }
+html[data-bs-theme] .btn-primary { color: var(--nbt-primary-fg) !important; }
+html[data-bs-theme=dark] .text-secondary { color: var(--nbt-muted) !important; }
+html[data-bs-theme] .navbar { --tblr-navbar-active-border-color: var(--nbt-primary); }
+html[data-bs-theme] header.navbar,
+html[data-bs-theme] .page-header { background-color: var(--nbt-header); }
+html[data-bs-theme] .card { background: var(--nbt-surface) !important; }
+html[data-bs-theme] .table thead th,
+html[data-bs-theme] .markdown > table thead th { background: var(--nbt-table-header) !important; color: var(--nbt-table-header-text); }
+html[data-bs-theme] .page-body .card .card-header,
+html[data-bs-theme] .card-header-tabs,
+html[data-bs-theme] .card-header-light { background: var(--nbt-card-header); }
+html[data-bs-theme] .text-bg-primary,
+html[data-bs-theme] .bg-primary .card-title,
+html[data-bs-theme] .bg-primary a,
+html[data-bs-theme] .bg-primary i { color: var(--nbt-primary-fg) !important; }
+html[data-bs-theme] .page-link.active,
+html[data-bs-theme] .active > .page-link { color: var(--nbt-primary-fg); }
+html[data-bs-theme] .footer .text-primary { color: var(--nbt-text) !important; }
+html[data-bs-theme] .list-group-item.active { border-left-color: var(--nbt-primary); }
+html[data-bs-theme] .page-link:hover .page-item-title { color: var(--nbt-primary); }
+html[data-bs-theme] .status-primary { --tblr-status-color: var(--nbt-primary); --tblr-status-color-rgb: var(--nbt-primary-rgb); }
+html[data-bs-theme] .toast-primary { --tblr-toast-color: var(--nbt-primary); }
+html[data-bs-theme] .ts-wrapper.multi .ts-control > div.active { background: var(--nbt-primary); }
+html[data-bs-theme] tr[data-virtual=true] { --tblr-table-bg-state: rgba(var(--nbt-primary-rgb), .15); }
+
+/* Readable text on status colored backgrounds (widget headers, badges):
+   netbox.css always uses near-white, which fails on light custom colors. */
+html[data-bs-theme] .text-bg-gray { color: var(--nbt-secondary-on) !important; }
+html[data-bs-theme] .text-bg-secondary { color: var(--nbt-secondary-on) !important; }
+html[data-bs-theme] .text-bg-success { color: var(--nbt-success-on) !important; }
+html[data-bs-theme] .text-bg-info { color: var(--nbt-info-on) !important; }
+html[data-bs-theme] .text-bg-warning { color: var(--nbt-warning-on) !important; }
+html[data-bs-theme] .text-bg-danger { color: var(--nbt-danger-on) !important; }
+
+/* Sidebar */
+html[data-bs-theme] .navbar-vertical.navbar-expand-lg {
+  background: linear-gradient(180deg, transparent, color-mix(in srgb, var(--nbt-sidebar-accent) 10%, transparent)), var(--nbt-sidebar);
+  --tblr-navbar-active-bg: color-mix(in srgb, var(--nbt-sidebar-text) 7%, transparent);
+}
+html[data-bs-theme] .navbar-vertical.navbar-expand-lg .nav-link-title,
+html[data-bs-theme] .navbar-vertical.navbar-expand-lg .nav-link-icon,
+html[data-bs-theme] .navbar-vertical.navbar-expand-lg .dropdown-item > a,
+html[data-bs-theme] .navbar-vertical.navbar-expand-lg .navbar-toggler { color: var(--nbt-sidebar-text) !important; }
+html[data-bs-theme] .navbar-vertical.navbar-expand-lg .text-muted,
+html[data-bs-theme] .navbar-vertical.navbar-expand-lg .netbox-edition { color: color-mix(in srgb, var(--nbt-sidebar-text) 65%, transparent) !important; }
+html[data-bs-theme] .navbar-vertical.navbar-expand-lg .text-secondary { color: var(--nbt-sidebar-accent) !important; }
+html[data-bs-theme] .navbar-vertical.navbar-expand-lg .nav-item.dropdown.active:after { border-color: var(--nbt-sidebar-accent) !important; }
+html[data-bs-theme] .navbar-vertical.navbar-expand-lg .dropdown-item.active,
+html[data-bs-theme] .navbar-vertical.navbar-expand-lg .dropdown-item:hover { background-color: var(--tblr-navbar-active-bg) !important; }
