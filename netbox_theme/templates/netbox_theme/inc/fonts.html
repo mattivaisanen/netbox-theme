@@ -1,4 +1,4 @@
-{% load i18n %}
+{% load i18n l10n %}
 <div class="card">
   <div class="card-header d-flex align-items-center">
     <h2 class="card-title mb-0 flex-fill">{% trans "Fonts" %}</h2>
@@ -84,7 +84,7 @@
           <label class="form-label" for="typography_base_size">{% trans "Text size" %}</label>
           <div class="input-group">
             <input type="number" name="typography_base_size" id="typography_base_size" class="form-control"
-                   value="{{ typography.base_size }}" min="11" max="20" step="0.5"
+                   value="{{ typography.base_size|unlocalize }}" min="11" max="20" step="any"
                    data-font-var="--nbt-font-size" data-scale="16" data-suffix="rem" data-netbox=".875rem" data-default="14">
             <span class="input-group-text">px</span>
           </div>
@@ -92,7 +92,7 @@
         <div class="col-6 col-md-4">
           <label class="form-label" for="typography_line_height">{% trans "Line height" %}</label>
           <input type="number" name="typography_line_height" id="typography_line_height" class="form-control"
-                 value="{{ typography.line_height }}" min="1" max="2.2" step="0.05"
+                 value="{{ typography.line_height|unlocalize }}" min="1" max="2.2" step="any"
                  data-font-var="--nbt-line-height" data-netbox="1.4285714286" data-default="1.43">
         </div>
       </div>
@@ -112,7 +112,7 @@
           <label class="form-label" for="typography_letter_spacing">{% trans "Letter spacing" %}</label>
           <div class="input-group">
             <input type="number" name="typography_letter_spacing" id="typography_letter_spacing" class="form-control"
-                   value="{{ typography.letter_spacing }}" min="-0.05" max="0.2" step="0.005"
+                   value="{{ typography.letter_spacing|unlocalize }}" min="-0.05" max="0.2" step="any"
                    data-font-var="--nbt-letter-spacing" data-suffix="em" data-netbox="normal" data-default="0">
             <span class="input-group-text">em</span>
           </div>
@@ -121,7 +121,7 @@
           <label class="form-label" for="typography_headings_letter_spacing">{% trans "Heading letter spacing" %}</label>
           <div class="input-group">
             <input type="number" name="typography_headings_letter_spacing" id="typography_headings_letter_spacing"
-                   class="form-control" value="{{ typography.headings_letter_spacing }}" min="-0.05" max="0.3" step="0.005"
+                   class="form-control" value="{{ typography.headings_letter_spacing|unlocalize }}" min="-0.05" max="0.3" step="any"
                    data-font-var="--nbt-headings-letter-spacing" data-suffix="em" data-netbox="inherit" data-default="0">
             <span class="input-group-text">em</span>
           </div>

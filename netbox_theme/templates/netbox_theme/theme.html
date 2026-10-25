@@ -273,7 +273,8 @@
     </div>
   </div>
 
-  <div class="text-end mb-3">
+  <div class="d-flex justify-content-end align-items-center gap-3 mb-3">
+    <div class="text-danger d-none" id="theme-form-problem" role="alert"></div>
     <button type="submit" class="btn btn-primary">
       <i class="mdi mdi-content-save" aria-hidden="true"></i> {% trans "Save" %}
     </button>
@@ -513,6 +514,30 @@
         var section = button.dataset.reset;
         if (section === 'light' || section === 'dark') { resets.colors(section); } else { resets[section](); }
       });
+    });
+
+    // A field the browser rejects may sit in a closed section: open it, go there and say so next to Save.
+    var form = document.getElementById('theme-form');
+    var problem = document.getElementById('theme-form-problem');
+    var reported = false;
+    form.addEventListener('invalid', function (event) {
+      var field = event.target;
+      var section = field.closest('details');
+      if (section) { section.open = true; }
+      if (!reported) {
+        reported = true;
+        var label = form.querySelector('label[for="' + field.id + '"]');
+        problem.textContent = '{% trans "Not saved:" as not_saved %}{{ not_saved|escapejs }} ' +
+          (label ? label.textContent.trim() + ': ' : '') + field.validationMessage;
+        problem.classList.remove('d-none');
+        field.scrollIntoView({ block: 'center' });
+        setTimeout(function () { reported = false; }, 0);
+      }
+    }, true);
+    form.addEventListener('submit', function () { problem.classList.add('d-none'); });
+    // After a failed save, open the closed sections that hold the errors.
+    form.querySelectorAll('details').forEach(function (section) {
+      if (section.querySelector('.text-danger')) { section.open = true; }
     });
 
     apply();
