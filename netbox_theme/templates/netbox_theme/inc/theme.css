@@ -149,3 +149,27 @@ html[data-bs-theme] .rack_elevation svg {
   }
   html[data-bs-theme] .navbar-vertical.navbar-expand-lg .navbar-brand-image { max-width: 100%; object-fit: contain; }
 }
+
+/* Fonts (fonts.py). Each --nbt-font* variable is only set when the theme
+   changes it; the fallbacks are NetBox's own values. */
+html[data-bs-theme] {
+  --tblr-font-sans-serif: var(--nbt-font-body, Inter, system-ui, sans-serif);
+  --tblr-body-font-family: var(--nbt-font-body, Inter, system-ui, sans-serif);
+  --tblr-font-monospace: var(--nbt-font-mono, "Roboto Mono");
+  --tblr-body-font-size: var(--nbt-font-size, .875rem);
+  --tblr-body-line-height: var(--nbt-line-height, 1.4285714286);
+  --tblr-body-font-weight: var(--nbt-body-weight, 400);
+  --tblr-font-weight-bold: var(--nbt-bold-weight, 600);
+  --tblr-font-weight-headings: var(--nbt-headings-weight, var(--tblr-font-weight-bold));
+}
+html[data-bs-theme] body {
+  letter-spacing: var(--nbt-letter-spacing, normal);
+  font-variant-numeric: var(--nbt-numbers, normal);
+}
+html[data-bs-theme] :is(h1, h2, h3, h4, h5, h6, .h1, .h2, .h3, .h4, .h5, .h6, .page-title, .card-title) {
+  font-family: var(--nbt-font-headings, inherit);
+  font-weight: var(--nbt-headings-weight, var(--tblr-font-weight-bold));
+  letter-spacing: var(--nbt-headings-letter-spacing, inherit);
+  text-transform: var(--nbt-headings-case, inherit);
+}
+html[data-bs-theme] .rack_elevation svg { font-family: var(--nbt-font-body, inherit); }

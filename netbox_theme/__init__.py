@@ -23,6 +23,8 @@ class ThemeConfig(PluginConfig):
     default_settings = {
         # Largest logo file accepted, in kilobytes.
         'max_logo_kb': 512,
+        # Largest font file accepted, in kilobytes.
+        'max_font_kb': 2048,
     }
 
     menu_items = 'navigation.menu_items'

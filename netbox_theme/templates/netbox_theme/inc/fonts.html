@@ -1,0 +1,159 @@
+{% load i18n %}
+<div class="card">
+  <h2 class="card-header">{% trans "Fonts" %}</h2>
+  <div class="card-body">
+
+    <h3 class="h4">{% trans "1. Add font files" %}</h3>
+    <input type="file" name="font_files" multiple class="form-control" accept=".woff2,.woff,.ttf,.otf">
+    <div class="form-text">
+      {% blocktrans trimmed %}
+        WOFF2, WOFF, TTF or OTF. Select all files of a family at once (Regular, Italic, Bold...). Family, weight and
+        style are read from each file; check them below after saving and correct any that are wrong.
+      {% endblocktrans %}
+    </div>
+
+    {% if font_files %}
+      <div class="table-responsive mt-3">
+        <table class="table table-sm align-middle mb-0">
+          <thead>
+            <tr>
+              <th>{% trans "Family" %}</th><th>{% trans "Weight" %}</th><th>{% trans "Style" %}</th>
+              <th>{% trans "Variable" %}</th><th>{% trans "Sample" %}</th><th>{% trans "File" %}</th><th>{% trans "Delete" %}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for font in font_files %}
+              <tr>
+                <td><input type="text" name="font_{{ font.pk }}_family" value="{{ font.family }}" maxlength="60"
+                           class="form-control form-control-sm" aria-label="{% trans "Family" %}"></td>
+                <td>
+                  <select name="font_{{ font.pk }}_weight" class="form-select form-select-sm" aria-label="{% trans "Weight" %}">
+                    {% for weight in font_weights %}
+                      <option value="{{ weight }}"{% if weight == font.weight %} selected{% endif %}>{{ weight }}</option>
+                    {% endfor %}
+                  </select>
+                </td>
+                <td>
+                  <select name="font_{{ font.pk }}_style" class="form-select form-select-sm" aria-label="{% trans "Style" %}">
+                    {% for style in font_styles %}
+                      <option value="{{ style }}"{% if style == font.style %} selected{% endif %}>{{ style|capfirst }}</option>
+                    {% endfor %}
+                  </select>
+                </td>
+                <td><input type="checkbox" name="font_{{ font.pk }}_variable" class="form-check-input"
+                           {% if font.variable %}checked{% endif %} title="{% trans "One file with every weight" %}"
+                           aria-label="{% trans "Variable" %}"></td>
+                <td class="text-nowrap" style="font-family: '{{ font.family|escapejs }}'; font-weight: {{ font.weight }}; font-style: {{ font.style }}">
+                  Aa Bb 0123
+                </td>
+                <td class="text-muted small text-break">{{ font.filename }}</td>
+                <td><input type="checkbox" name="font_{{ font.pk }}_delete" class="form-check-input" aria-label="{% trans "Delete" %}"></td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% endif %}
+
+    <h3 class="h4 pt-3 mt-3 border-top">{% trans "2. Choose where they are used" %}</h3>
+    <div class="row g-2 mb-3">
+      {% for role, label, chosen, choices in font_roles %}
+        <div class="col-md-4">
+          <label class="form-label" for="typography_{{ role }}_family">{{ label }}</label>
+          <select name="typography_{{ role }}_family" id="typography_{{ role }}_family" class="form-select"
+                  data-font-var="--nbt-font-{{ role }}"
+                  data-netbox="{% if role == 'body' %}Inter, system-ui, sans-serif{% elif role == 'mono' %}&quot;Roboto Mono&quot;{% else %}inherit{% endif %}">
+            <option value="">
+              {% if role == 'body' %}{% trans "NetBox's (Inter)" %}{% elif role == 'mono' %}{% trans "NetBox's (Roboto Mono)" %}{% else %}{% trans "Same as body text" %}{% endif %}
+            </option>
+            {% for value, choice_label, stack in choices %}
+              <option value="{{ value }}" data-stack="{{ stack }}"{% if value == chosen %} selected{% endif %}>{{ choice_label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      {% endfor %}
+    </div>
+    <div class="row g-2 mb-3">
+      <div class="col-6 col-md-3">
+        <label class="form-label" for="typography_base_size">{% trans "Text size" %}</label>
+        <div class="input-group">
+          <input type="number" name="typography_base_size" id="typography_base_size" class="form-control"
+                 value="{{ typography.base_size }}" min="11" max="20" step="0.5"
+                 data-font-var="--nbt-font-size" data-scale="16" data-suffix="rem" data-netbox=".875rem" data-default="14">
+          <span class="input-group-text">px</span>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <label class="form-label" for="typography_line_height">{% trans "Line height" %}</label>
+        <input type="number" name="typography_line_height" id="typography_line_height" class="form-control"
+               value="{{ typography.line_height }}" min="1" max="2.2" step="0.05"
+               data-font-var="--nbt-line-height" data-netbox="1.4285714286" data-default="1.43">
+      </div>
+    </div>
+
+    <details>
+      <summary class="mb-2">{% trans "Advanced" %}</summary>
+      <div class="row g-2 mb-2">
+        {% for key, label, value, var, netbox, default in weight_settings %}
+          <div class="col-6 col-md-4">
+            <label class="form-label" for="typography_{{ key }}">{{ label }}</label>
+            <select name="typography_{{ key }}" id="typography_{{ key }}" class="form-select"
+                    data-font-var="{{ var }}" data-netbox="{{ netbox }}" data-default="{{ default }}">
+              {% for weight in font_weights %}
+                <option value="{{ weight }}"{% if weight == value %} selected{% endif %}>{{ weight }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        {% endfor %}
+      </div>
+      <div class="row g-2 mb-2">
+        <div class="col-6 col-md-4">
+          <label class="form-label" for="typography_letter_spacing">{% trans "Letter spacing" %}</label>
+          <div class="input-group">
+            <input type="number" name="typography_letter_spacing" id="typography_letter_spacing" class="form-control"
+                   value="{{ typography.letter_spacing }}" min="-0.05" max="0.2" step="0.005"
+                   data-font-var="--nbt-letter-spacing" data-suffix="em" data-netbox="normal" data-default="0">
+            <span class="input-group-text">em</span>
+          </div>
+        </div>
+        <div class="col-6 col-md-4">
+          <label class="form-label" for="typography_headings_letter_spacing">{% trans "Heading letter spacing" %}</label>
+          <div class="input-group">
+            <input type="number" name="typography_headings_letter_spacing" id="typography_headings_letter_spacing"
+                   class="form-control" value="{{ typography.headings_letter_spacing }}" min="-0.05" max="0.3" step="0.005"
+                   data-font-var="--nbt-headings-letter-spacing" data-suffix="em" data-netbox="inherit" data-default="0">
+            <span class="input-group-text">em</span>
+          </div>
+        </div>
+        <div class="col-6 col-md-4">
+          <label class="form-label" for="typography_headings_case">{% trans "Heading case" %}</label>
+          <select name="typography_headings_case" id="typography_headings_case" class="form-select"
+                  data-font-var="--nbt-headings-case" data-netbox="inherit" data-default="none">
+            <option value="none"{% if typography.headings_case == 'none' %} selected{% endif %}>{% trans "As written" %}</option>
+            <option value="uppercase"{% if typography.headings_case == 'uppercase' %} selected{% endif %}>{% trans "Uppercase" %}</option>
+          </select>
+        </div>
+      </div>
+      <input type="hidden" name="typography_tabular_numbers" value="">
+      <label class="form-check">
+        <input type="checkbox" name="typography_tabular_numbers" value="on" class="form-check-input"
+               {% if typography.tabular_numbers %}checked{% endif %}
+               data-font-var="--nbt-numbers" data-on="tabular-nums" data-netbox="normal">
+        <span class="form-check-label">{% trans "Tabular numbers" %}</span>
+        <span class="form-text d-block">{% trans "Every digit equally wide, so IP addresses, VLAN IDs and counts line up in columns." %}</span>
+      </label>
+    </details>
+
+    <div class="mt-3 p-3 border rounded">
+      <div class="h3 mb-1">{% trans "Sample heading" %}</div>
+      <p class="mb-1">
+        {% blocktrans trimmed %}
+          Body text: core-sw-01 in rack A12, 48 interfaces, <strong>bold</strong> and <em>italic</em>.
+        {% endblocktrans %}
+      </p>
+      <code>interface GigabitEthernet0/1 ip address 10.20.30.40 255.255.255.0</code>
+    </div>
+  </div>
+</div>
+  </div>
+</div>

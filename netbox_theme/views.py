@@ -1,4 +1,5 @@
 from django.contrib import messages
+from django.db import transaction
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.core.exceptions import ValidationError
 from django.http import Http404, HttpResponse, JsonResponse
@@ -7,9 +8,9 @@ from django.utils.safestring import mark_safe
 from django.utils.translation import gettext as _
 from django.views import View
 
-from . import colors, css, custom_colors, logos, statuses, transfer
+from . import colors, css, custom_colors, fonts, logos, statuses, transfer
 from .forms import ThemeForm, ThemeImportForm, field_name
-from .models import Theme
+from .models import FontFile, Theme
 from .template_content import ThemeHead
 
 PERMISSION = 'netbox_theme.change_theme'
@@ -34,7 +35,9 @@ class ThemeView(ThemeAdminMixin, View):
         form = ThemeForm(request.POST, request.FILES)
         if not form.is_valid():
             return self.render(request, form, theme)
-        form.apply(theme or Theme()).save()
+        with transaction.atomic():
+            form.apply(theme or Theme()).save()
+            form.save_fonts()
         messages.success(request, _('Theme saved.'))
         return redirect(HOME)
 
@@ -66,7 +69,52 @@ class ThemeView(ThemeAdminMixin, View):
             'edition_css': css.edition(form['edition'].value(), form['edition_text'].value() or ''),
             'logo_size_css': self.logo_size_css(form),
             'custom_color_css': mark_safe(custom_colors.css(self.valid_custom_colors(form))),
+            # Fonts: saved files, the settings as edited, and what each family select offers.
+            'font_files': FontFile.listed(),
+            'font_weights': fonts.WEIGHTS,
+            'font_styles': fonts.STYLES,
+            'font_roles': self.font_roles(form),
+            'weight_settings': self.weight_settings(form),
+            'typography': fonts.with_defaults(form.typography_values()),
+            **ThemeHead.font_context(self.typography_values(form)),
         })
+
+    @staticmethod
+    def weight_settings(form):
+        """[(key, label, value, CSS variable, NetBox's CSS value, default)] for the weight selects."""
+        values = fonts.with_defaults(form.typography_values())
+        rows = (
+            ('body_weight', _('Body weight'), '400'),
+            ('bold_weight', _('Bold weight'), '600'),
+            ('headings_weight', _('Heading weight'), 'var(--tblr-font-weight-bold)'),
+        )
+        def weight(key):
+            try:
+                return int(values[key])
+            except (TypeError, ValueError):
+                return fonts.SETTINGS[key][0]
+
+        return [(key, label, weight(key), f"--nbt-{key.replace('_', '-')}", netbox, fonts.SETTINGS[key][0])
+                for key, label, netbox in rows]
+
+    @staticmethod
+    def font_roles(form):
+        """[(role, label, chosen, [(value, label, CSS stack)])] for the family selects."""
+        chosen = fonts.with_defaults(form.typography_values())
+        families = FontFile.families()
+        return [
+            (role, label, chosen[f'{role}_family'],
+             [(value, choice_label, fonts.stack(value, role)) for value, choice_label, _stack in fonts.family_choices(families)])
+            for role, label in fonts.ROLES
+        ]
+
+    @staticmethod
+    def typography_values(form):
+        """The settings as edited, or the defaults where they do not validate (yet)."""
+        try:
+            return fonts.clean_typography(form.typography_values(), FontFile.families())
+        except ValidationError:
+            return fonts.with_defaults({})
 
     @staticmethod
     def logo_size_css(form):
@@ -119,10 +167,17 @@ class ThemeImportView(ThemeAdminMixin, View):
                 for error in errors:
                     messages.error(request, _('Import failed: {error}').format(error=error))
             return redirect(HOME)
+        values = dict(form.cleaned_data['file'])
+        font_files = values.pop('fonts', None)
         theme = Theme.current() or Theme()
-        for field, value in form.cleaned_data['file'].items():
-            setattr(theme, field, value)
-        theme.save()
+        with transaction.atomic():
+            for field, value in values.items():
+                setattr(theme, field, value)
+            theme.save()
+            if font_files is not None:
+                FontFile.clear()
+                for info, raw, filename in font_files:
+                    FontFile(data=raw, filename=filename, **info).save()
         messages.success(request, _('Theme "{name}" imported.').format(name=theme.name))
         return redirect(HOME)
 
@@ -146,4 +201,16 @@ class LogoView(View):
         response['X-Content-Type-Options'] = 'nosniff'
         # An SVG opened directly must not run scripts (in <img> it never does).
         response['Content-Security-Policy'] = "default-src 'none'; style-src 'unsafe-inline'; sandbox"
+        return response
+
+
+class FontView(View):
+    """An uploaded font file, cached like logos (`?v=<file version>`)."""
+    def get(self, request, pk):
+        font = FontFile.objects.filter(pk=pk).first()
+        if font is None:
+            raise Http404
+        response = HttpResponse(bytes(font.data), content_type=fonts.FORMATS[font.format][0])
+        response['Cache-Control'] = 'public, max-age=31536000, immutable'
+        response['X-Content-Type-Options'] = 'nosniff'
         return response

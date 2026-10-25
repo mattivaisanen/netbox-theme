@@ -7,22 +7,28 @@ Theme files: export the saved theme as JSON and import one back.
      "edition": "netbox" | "hidden" | "custom", "edition_text": "...",
      "logo_height": 32, "logo_margin_top": 12, "logo_margin_bottom": 12,
      "custom_colors": [{"slug", "name", "light", "dark"}, ...],
-     "status_colors": {"active": "green" | "nbt-<slug>", ...}}
+     "status_colors": {"active": "green" | "nbt-<slug>", ...},
+     "typography": {setting: value}, "fonts": [{"family", "weight", "style",
+     "variable", "filename", "data": base64}, ...]}
 
 Imports are checked like the editor's input: colors must be #rrggbb (unknown
 tokens are ignored, missing ones get NetBox's color) and logos are re-checked
-as uploads. A logo the file leaves out or empty keeps the current one.
+as uploads, fonts too. A logo the file leaves out or empty keeps the current
+one; so do the font files when the file has no `fonts` list.
 """
+import base64
+import binascii
 import json
 
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
 
-from . import colors, custom_colors, logos, statuses
-from .models import EditionChoices, Theme
+from . import colors, custom_colors, fonts, logos, statuses
+from .models import EditionChoices, FontFile, Theme
 
 FORMAT = 1
-MAX_FILE_BYTES = 8 * 1024 * 1024
+# Room for every font file at the largest size, base64 encoded.
+MAX_FILE_BYTES = 128 * 1024 * 1024
 
 
 def dump(theme):
@@ -39,6 +45,12 @@ def dump(theme):
         'logo_margin_bottom': theme.logo_margin_bottom,
         'custom_colors': custom_colors.stored(theme),
         'status_colors': statuses.stored(theme),
+        'typography': fonts.with_defaults(theme.typography),
+        'fonts': [
+            {'family': font.family, 'weight': font.weight, 'style': font.style, 'variable': font.variable,
+             'filename': font.filename, 'data': base64.b64encode(bytes(font.data)).decode()}
+            for font in FontFile.objects.all()
+        ],
     }
 
 
@@ -74,7 +86,38 @@ def load(raw):
         **_logo_size(data),
         'custom_colors': custom,
         'status_colors': status_colors,
+        **_fonts(data),
     }
+
+
+def _fonts(data):
+    """
+    {'fonts': [...], 'typography': {...}}. Without a `fonts` list the file
+    keeps the saved font files; typography may only use families it has.
+    """
+    result = {}
+    families = set(FontFile.families())
+    if isinstance(data.get('fonts'), list):
+        result['fonts'], families = [], set()
+        for entry in data['fonts'][:fonts.MAX_FILES]:
+            if not isinstance(entry, dict) or not isinstance(entry.get('data'), str):
+                raise ValidationError(_('Font entries need their file data.'))
+            try:
+                raw = base64.b64decode(entry['data'])
+            except (binascii.Error, ValueError):
+                raise ValidationError(_('A font file is not valid base64.'))
+            info = fonts.read(raw, str(entry.get('filename') or ''))
+            if entry.get('family'):
+                info['family'] = fonts.clean_family(entry['family'])
+            if entry.get('weight') in fonts.WEIGHTS:
+                info['weight'] = entry['weight']
+            if entry.get('style') in fonts.STYLES:
+                info['style'] = entry['style']
+            info['variable'] = bool(entry.get('variable', info['variable']))
+            result['fonts'].append((info, raw, str(entry.get('filename') or '')[:200]))
+            families.add(info['family'])
+    result['typography'] = fonts.clean_typography(data.get('typography') or {}, families)
+    return result
 
 
 def _logo_size(data):

@@ -5,8 +5,8 @@ from django.utils.safestring import mark_safe
 
 from netbox.plugins import PluginTemplateExtension
 
-from . import colors, css, custom_colors, logos
-from .models import Theme
+from . import colors, css, custom_colors, fonts, logos
+from .models import FontFile, Theme
 
 logger = logging.getLogger('netbox_theme')
 
@@ -31,6 +31,7 @@ class ThemeHead(PluginTemplateExtension):
                 **self.logo_urls(theme),
                 'edition_css': css.edition(theme.edition, theme.edition_text),
                 'logo_size_css': css.logo_size(theme.logo_height, theme.logo_margin_top, theme.logo_margin_bottom),
+                **self.font_context(theme.typography),
                 'custom_color_css': mark_safe(custom_colors.css(custom_colors.stored(theme))),
             })
         except Exception:
@@ -47,6 +48,19 @@ class ThemeHead(PluginTemplateExtension):
         if not theme.logo(slot):
             return ''
         return f"{reverse('plugins:netbox_theme:logo', args=[slot])}?v={theme.version}"
+
+    @staticmethod
+    def font_url(font):
+        return f"{reverse('plugins:netbox_theme:font', args=[font.pk])}?v={font.version}"
+
+    @classmethod
+    def font_context(cls, typography):
+        """@font-face rules and `--nbt-*` font variables for inc/head.html."""
+        variables = fonts.css_variables(typography or {})
+        return {
+            'font_faces': mark_safe(fonts.font_faces(FontFile.listed(), cls.font_url)),
+            'font_variables': mark_safe(' '.join(f'{name}: {value};' for name, value in variables.items())),
+        }
 
     @classmethod
     def logo_urls(cls, theme):

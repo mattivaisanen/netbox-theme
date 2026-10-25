@@ -29,6 +29,11 @@ a live preview; nothing needs a restart.
   one for light mode and optionally another for dark mode, and set its height
   and the space above and below it (even by default). The login page has its
   own logo upload; without one it keeps NetBox's.
+- **Fonts.** Upload WOFF2, WOFF, TTF or OTF files (all of a family at once);
+  family, weight and style are read from each file. Choose a font for body
+  text, headings and monospace (code, configs), or a system font, then the
+  text size and line height. *Advanced* has weights, letter spacing, heading
+  case and tabular numbers (digits that line up in columns).
 - **Edition label.** Keep, hide or replace the "Community" text under the
   logo (sidebar and login page).
 - **Restore NetBox defaults** deletes the saved theme; NetBox then looks

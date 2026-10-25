@@ -1,7 +1,10 @@
 """Colors, logos, theme files and the theme pages."""
 import base64
+import glob
 import json
+import struct
 
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.cache import cache
 from django.core.exceptions import ValidationError
@@ -9,8 +12,8 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import SimpleTestCase, TestCase
 from django.urls import reverse
 
-from .. import colors, logos, transfer, custom_colors
-from ..models import Theme
+from .. import colors, custom_colors, fonts, logos, transfer
+from ..models import FontFile, Theme
 
 URL = 'plugins:netbox_theme:'
 PNG = b'\x89PNG\r\n\x1a\n' + b'\x00' * 32
@@ -67,6 +70,56 @@ class CustomColorTests(SimpleTestCase):
         ):
             with self.assertRaises(ValidationError, msg=entries):
                 custom_colors.clean(entries)
+
+
+def sfnt(family, weight, italic=False):
+    """A minimal TrueType file with just `name` and `OS/2` tables."""
+    name_text = family.encode('utf-16-be')
+    name = struct.pack('>HHH', 0, 1, 18) + struct.pack('>HHHHHH', 3, 1, 0x409, 1, len(name_text), 0) + name_text
+    os2 = bytearray(64)
+    struct.pack_into('>H', os2, 4, weight)
+    struct.pack_into('>H', os2, 62, 1 if italic else 0)
+    tables = [(b'OS/2', bytes(os2)), (b'name', name)]
+    offset = 12 + 16 * len(tables)
+    header, body = struct.pack('>IHHHH', 0x00010000, len(tables), 0, 0, 0), b''
+    for tag, data in tables:
+        header += struct.pack('>4sIII', tag, 0, offset + len(body), len(data))
+        body += data
+    return header + body
+
+
+def netbox_font(pattern):
+    """One of NetBox's own font files (collectstatic puts them in STATIC_ROOT)."""
+    return open(sorted(glob.glob(f'{settings.STATIC_ROOT}/{pattern}'))[0], 'rb').read()
+
+
+class FontFileTests(SimpleTestCase):
+    def test_reads_family_weight_and_style(self):
+        self.assertEqual(fonts.read(sfnt('Acme Sans', 700, italic=True), 'whatever.ttf'), {
+            'family': 'Acme Sans', 'weight': 700, 'style': 'italic', 'variable': False, 'format': 'ttf',
+        })
+        woff = fonts.read(netbox_font('roboto-mono-latin-300italic-*.woff'), 'renamed.woff')
+        self.assertEqual((woff['family'], woff['weight'], woff['style']), ('Roboto Mono', 300, 'italic'))
+
+    def test_woff2_is_guessed_from_the_file_name(self):
+        info = fonts.read(b'wOF2' + b'\x00' * 40, 'OpenSans-SemiBoldItalic.woff2')
+        self.assertEqual((info['family'], info['weight'], info['style']), ('Open Sans', 600, 'italic'))
+        self.assertTrue(fonts.read(b'wOF2' + b'\x00' * 40, 'Inter[wght].woff2')['variable'])
+
+    def test_rejects_other_files(self):
+        with self.assertRaises(ValidationError):
+            fonts.read(PNG, 'logo.ttf')
+
+    def test_typography(self):
+        with self.assertRaises(ValidationError):
+            fonts.clean_typography({'body_family': 'font:Missing'}, [])
+        with self.assertRaises(ValidationError):
+            fonts.clean_typography({'base_size': 40}, [])
+        variables = fonts.css_variables(fonts.clean_typography(
+            {'body_family': 'font:Acme "Sans"', 'base_size': 16, 'tabular_numbers': 'on'}, ['Acme "Sans"']))
+        self.assertEqual(variables['--nbt-font-body'], '"Acme\\000020\\000022Sans\\000022", sans-serif')
+        self.assertEqual((variables['--nbt-font-size'], variables['--nbt-numbers']), ('1.0000rem', 'tabular-nums'))
+        self.assertEqual(fonts.css_variables(fonts.clean_typography({}, [])), {})
 
 
 class LogoTests(SimpleTestCase):
@@ -220,6 +273,34 @@ class PageTests(TestCase):
         self.assertNotContains(page, '.navbar-brand-image.hide-theme-dark { content')
         self.assertEqual(self.client.get(reverse(URL + 'logo', args=['login_dark']))['Content-Type'], 'image/png')
         self.assertEqual(self.client.get(reverse(URL + 'logo', args=['nope'])).status_code, 404)
+
+    def test_fonts(self):
+        upload = SimpleUploadedFile('acme.ttf', sfnt('Acme Sans', 400))
+        self.client.post(reverse(URL + 'theme'), self.form_data(font_files=[upload]))
+        font = FontFile.objects.get()
+        self.assertEqual((font.family, font.weight, font.format), ('Acme Sans', 400, 'ttf'))
+        # Correct the weight and use the family for body text.
+        response = self.client.post(reverse(URL + 'theme'), self.form_data(**{
+            f'font_{font.pk}_family': 'Acme Sans', f'font_{font.pk}_weight': '300', f'font_{font.pk}_style': 'normal',
+            'typography_body_family': 'font:Acme Sans', 'typography_line_height': '1.6',
+        }))
+        self.assertEqual(response.status_code, 302)
+        self.assertContains(self.client.get(reverse(URL + 'theme')), f'name="font_{font.pk}_family"')
+        page = self.client.get(reverse('home'))
+        self.assertContains(page, 'font-family: "Acme\\000020Sans"; src: url("' + reverse(URL + 'font', args=[font.pk]))
+        self.assertContains(page, 'font-weight: 300;')
+        self.assertContains(page, '--nbt-font-body: "Acme\\000020Sans", sans-serif;')
+        self.assertContains(page, '--nbt-line-height: 1.6;')
+        served = self.client.get(reverse(URL + 'font', args=[font.pk]))
+        self.assertEqual((served['Content-Type'], served.content[:4]), ('font/ttf', b'\x00\x01\x00\x00'))
+
+        # Export and import carry fonts; restoring defaults removes them.
+        exported = self.client.get(reverse(URL + 'theme_export')).content
+        self.client.post(reverse(URL + 'theme_reset'))
+        self.assertFalse(FontFile.objects.exists())
+        self.client.post(reverse(URL + 'theme_import'), {'file': SimpleUploadedFile('t.json', exported)})
+        self.assertEqual(FontFile.objects.get().weight, 300)
+        self.assertEqual(Theme.objects.get().typography['body_family'], 'font:Acme Sans')
 
     def test_bad_input_is_not_saved(self):
         response = self.client.post(reverse(URL + 'theme'), self.form_data(

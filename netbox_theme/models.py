@@ -13,9 +13,10 @@ from django.utils.translation import gettext_lazy as _
 
 from . import colors, logos
 
-__all__ = ('EditionChoices', 'Theme')
+__all__ = ('EditionChoices', 'FontFile', 'Theme')
 
 CACHE_KEY = 'netbox_theme:current'
+FONTS_CACHE_KEY = 'netbox_theme:fonts'
 
 
 class EditionChoices(models.TextChoices):
@@ -55,6 +56,8 @@ class Theme(models.Model):
     custom_colors = models.JSONField(verbose_name=_('custom colors'), default=list, blank=True)
     # {status value: color name or nbt-<slug>} (statuses.py).
     status_colors = models.JSONField(verbose_name=_('status colors'), default=dict, blank=True)
+    # Font roles and settings (fonts.SETTINGS); {} is NetBox's own.
+    typography = models.JSONField(verbose_name=_('typography'), default=dict, blank=True)
     updated = models.DateTimeField(auto_now=True)
 
     class Meta:
@@ -79,6 +82,7 @@ class Theme(models.Model):
         """Back to NetBox's own colors and logo."""
         cls.objects.all().delete()
         cache.delete(CACHE_KEY)
+        FontFile.clear()
 
     @classmethod
     def current(cls):
@@ -105,4 +109,58 @@ class Theme(models.Model):
     @property
     def version(self):
         """Changes with every save; added to logo URLs so browsers can cache them."""
+        return int(self.updated.timestamp()) if self.updated else 0
+
+
+class FontFile(models.Model):
+    """
+    One uploaded font file (one weight and style of a family, or a variable
+    font with every weight). Stored in the database like logos.
+    """
+    family = models.CharField(verbose_name=_('family'), max_length=60)
+    weight = models.PositiveSmallIntegerField(verbose_name=_('weight'), default=400)
+    style = models.CharField(verbose_name=_('style'), max_length=10, default='normal')
+    variable = models.BooleanField(verbose_name=_('variable weight'), default=False)
+    format = models.CharField(verbose_name=_('format'), max_length=10)
+    filename = models.CharField(verbose_name=_('file name'), max_length=200, blank=True)
+    data = models.BinaryField()
+    updated = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ('family', 'weight', 'style')
+        verbose_name = _('font file')
+        verbose_name_plural = _('font files')
+
+    def __str__(self):
+        return f'{self.family} {self.weight} {self.style}'
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        cache.delete(FONTS_CACHE_KEY)
+
+    def delete(self, *args, **kwargs):
+        result = super().delete(*args, **kwargs)
+        cache.delete(FONTS_CACHE_KEY)
+        return result
+
+    @classmethod
+    def clear(cls):
+        cls.objects.all().delete()
+        cache.delete(FONTS_CACHE_KEY)
+
+    @classmethod
+    def listed(cls):
+        """Every font file without its data, cached until one changes."""
+        fonts = cache.get(FONTS_CACHE_KEY)
+        if fonts is None:
+            fonts = list(cls.objects.defer('data'))
+            cache.set(FONTS_CACHE_KEY, fonts, None)
+        return fonts
+
+    @classmethod
+    def families(cls):
+        return sorted({font.family for font in cls.listed()})
+
+    @property
+    def version(self):
         return int(self.updated.timestamp()) if self.updated else 0

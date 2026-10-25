@@ -212,6 +212,8 @@
     </div>
   </div>
 
+  {% include 'netbox_theme/inc/fonts.html' %}
+
   <div class="card">
     <h2 class="card-header">{% trans "Status colors" %}</h2>
     <div class="card-body">
@@ -421,6 +423,28 @@
         var sample = select.parentNode.querySelector('.status-color-sample');
         sample.className = 'badge status-color-sample text-bg-' + (select.value || sample.dataset.default);
       });
+    });
+
+    // Fonts: each control sets its --nbt-* variable; NetBox's value when left at the default.
+    document.querySelectorAll('[data-font-var]').forEach(function (control) {
+      function update() {
+        var value;
+        if (control.type === 'checkbox') {
+          value = control.checked ? control.dataset.on : control.dataset.netbox;
+        } else if (control.tagName === 'SELECT' && control.dataset.default === undefined) {
+          var option = control.options[control.selectedIndex];
+          value = control.value ? option.dataset.stack : control.dataset.netbox;
+        } else if (control.value === '' || String(parseFloat(control.value)) === String(parseFloat(control.dataset.default)) ||
+                   control.value === control.dataset.default) {
+          value = control.dataset.netbox;
+        } else {
+          var number = parseFloat(control.value);
+          value = isNaN(number) ? control.value : String(control.dataset.scale ? number / parseFloat(control.dataset.scale) : number);
+          value += control.dataset.suffix || '';
+        }
+        root.style.setProperty(control.dataset.fontVar, value);
+      }
+      control.addEventListener(control.type === 'checkbox' || control.tagName === 'SELECT' ? 'change' : 'input', update);
     });
 
     apply();

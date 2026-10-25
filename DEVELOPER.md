@@ -55,6 +55,24 @@ import, a regex on the form).
 
 `head()` never raises: on any error the page is drawn without the theme.
 
+## Fonts
+
+`models.FontFile` holds uploaded font files (database, like logos), served
+by `views.FontView` with a year-long cache. `fonts.read()` checks the format
+by its magic bytes and reads family (name ID 16, else 1), weight
+(`OS/2.usWeightClass`), style (`OS/2.fsSelection` bit 0, else
+`head.macStyle`) and whether it is variable (`fvar`) from TTF, OTF and WOFF
+(zlib) tables. WOFF2 needs Brotli, which the standard library lacks, so its
+values are guessed from the file name; the editor lets users correct them.
+`FontFile.listed()` (no data) is cached and used for `@font-face` rules on
+every page.
+
+`Theme.typography` holds `fonts.SETTINGS`. `fonts.css_variables()` emits a
+`--nbt-*` variable only for settings that differ from NetBox's; the font
+section of `inc/theme.css` maps them onto Tabler's `--tblr-font-*` /
+`--tblr-body-*` variables and heading rules, falling back to NetBox's values.
+The editor's script sets the same variables inline as controls change.
+
 ## Custom colors and status colors
 
 `custom_colors.py`: named colors, used by widgets and statuses as
@@ -97,6 +115,7 @@ Check these on every NetBox upgrade; `colors.NETBOX` should match too.
 | Colors `netbox.css` writes directly: `.page` and the active page tab (the page background, `!important`), `html` itself, `.btn-primary` text, `.text-secondary` in dark mode, `.card`, `.table thead th` (background and text), `.card-header` in `.page-body`, `.navbar`/`.page-header`, `.text-bg-primary`, `.page-link.active`, `.footer .text-primary`, `.list-group-item.active`, `.status-primary`, `.toast-primary`, tom-select's `.ts-control > div.active`, `tr[data-virtual]`, `.text-bg-<color>` text (always near-white in NetBox) | Each has a rule in `inc/theme.css`. |
 | Sidebar `.navbar-vertical.navbar-expand-lg` background gradient, `.nav-link-title`, `.nav-link-icon`, `.dropdown-item > a`, `.text-secondary` | Sidebar tokens. |
 | Rack elevation SVG variables `--nbx-rack-*` (`static/rack_elevation.css`, inlined into the SVG, which `templates/dcim/inc/rack_elevation.html` loads into `.rack_elevation` with HTMX) | Rack colors follow page background, text, link and muted. |
+| Tabler `--tblr-font-sans-serif`, `--tblr-body-font-family`, `--tblr-font-monospace`, `--tblr-body-font-size`, `--tblr-body-line-height`, `--tblr-body-font-weight`, `--tblr-font-weight-bold`, `--tblr-font-weight-headings` | Fonts; fallbacks in `inc/theme.css` are NetBox 4.7's values. |
 | `templates/base/layout.html` logo `<img class="navbar-brand-image hide-theme-dark|light">`, `login.html` `<img class="logo hide-theme-dark|light">` | Logo swap. |
 | `.navbar-vertical.navbar-expand-lg .navbar-brand` padding, `.navbar-brand-image` height | Logo size and spacing. |
 | `.netbox-edition` (`base/layout.html`, `login.html`), sidebar `.fs-5` (.75rem) and login (.875rem) sizes | Edition label. |
