@@ -74,6 +74,7 @@ class ThemeView(ThemeAdminMixin, View):
             'light_variables': mark_safe(colors.css_variables(current['light'])),
             'dark_variables': mark_safe(colors.css_variables(current['dark'])),
             **ThemeHead.logo_urls(theme),
+            'netbox_palette_text': css.netbox_palette_text(),
             'edition_css': css.edition(form['edition'].value(), form['edition_text'].value() or ''),
             'logo_size_css': self.logo_size_css(form),
             'custom_color_css': mark_safe(custom_colors.css(self.valid_custom_colors(form))),

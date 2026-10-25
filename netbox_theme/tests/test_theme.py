@@ -207,6 +207,9 @@ class PageTests(TestCase):
         self.assertEqual(response.status_code, 302)
         page = self.client.get(reverse('home'))
         self.assertContains(page, '--nbt-primary: #123456; --nbt-primary-rgb: 18, 52, 86;')
+        # Text on light colors is dark: status colors through -fg, NetBox's named colors directly.
+        self.assertContains(page, '--tblr-warning-fg: var(--nbt-warning-on);')
+        self.assertContains(page, 'html[data-bs-theme] .text-bg-yellow')
         self.assertContains(page, reverse(URL + 'logo', args=['light']))
 
         self.assertNotContains(page, 'img.logo')  # The login page keeps NetBox's logo.

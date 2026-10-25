@@ -38,6 +38,13 @@ html[data-bs-theme] {
   --tblr-danger-bg-subtle: color-mix(in srgb, var(--nbt-danger) 20%, var(--nbt-body-bg));
   --tblr-danger-border-subtle: color-mix(in srgb, var(--nbt-danger) 40%, var(--nbt-body-bg));
   --tblr-brand: var(--nbt-primary);
+  /* Text and icons on status colored buttons, badges and backgrounds:
+     dark or white, whichever reads better on the color (colors.readable_text). */
+  --tblr-secondary-fg: var(--nbt-secondary-on);
+  --tblr-success-fg: var(--nbt-success-on);
+  --tblr-info-fg: var(--nbt-info-on);
+  --tblr-warning-fg: var(--nbt-warning-on);
+  --tblr-danger-fg: var(--nbt-danger-on);
   --tblr-primary-fg: var(--nbt-primary-fg);
   --tblr-btn-active-color: var(--nbt-primary-fg);
   --tblr-form-valid-color: var(--nbt-success);
@@ -78,6 +85,11 @@ html[data-bs-theme] { background-color: var(--nbt-body-bg); }
 html[data-bs-theme] .page,
 html[data-bs-theme] .page-tabs .nav-tabs .nav-link.active { background-color: var(--nbt-body-bg) !important; }
 html[data-bs-theme] .btn-primary { color: var(--nbt-primary-fg) !important; }
+/* Icons inside colored buttons follow the button's text. */
+html[data-bs-theme] :is(.btn-primary, .btn-secondary, .btn-success, .btn-info, .btn-warning, .btn-danger) :is(.mdi, .icon) {
+  color: inherit !important;
+}
+{{ netbox_palette_text }}
 html[data-bs-theme=dark] .text-secondary { color: var(--nbt-muted) !important; }
 html[data-bs-theme] .navbar { --tblr-navbar-active-border-color: var(--nbt-primary); }
 html[data-bs-theme] header.navbar,

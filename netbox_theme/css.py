@@ -40,3 +40,23 @@ def logo_size(height, top, bottom):
         ' @media (min-width: 992px) { html[data-bs-theme] .navbar-vertical.navbar-expand-lg .navbar-brand'
         f' {{ padding-top: {int(top)}px !important; padding-bottom: {int(bottom)}px !important; }} }}'
     )
+
+
+# NetBox's named colors (dashboard widgets, choice badges). netbox.css puts
+# near-white text on all of them, which is hard to read on the light ones.
+NETBOX_PALETTE = {
+    'blue': '#066fd1', 'azure': '#4299e1', 'indigo': '#4263eb', 'purple': '#ae3ec9', 'pink': '#d6336c',
+    'red': '#d63939', 'orange': '#f76707', 'yellow': '#f59f00', 'lime': '#74b816', 'green': '#2fb344',
+    'teal': '#0ca678', 'cyan': '#17a2b8', 'gray': '#6b7280',
+}
+
+
+def netbox_palette_text():
+    """Dark text on NetBox's named colors where it reads better than white."""
+    from .colors import DARK_TEXT, readable_text
+
+    names = [name for name, value in NETBOX_PALETTE.items() if readable_text(value) == DARK_TEXT]
+    if not names:
+        return ''
+    selector = ', '.join(f'html[data-bs-theme] .text-bg-{name}' for name in names)
+    return mark_safe(f'{selector} {{ color: {DARK_TEXT} !important; }}')

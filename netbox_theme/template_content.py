@@ -32,6 +32,7 @@ class ThemeHead(PluginTemplateExtension):
                 'edition_css': css.edition(theme.edition, theme.edition_text),
                 'logo_size_css': css.logo_size(theme.logo_height, theme.logo_margin_top, theme.logo_margin_bottom),
                 **self.font_context(theme.typography),
+                'netbox_palette_text': css.netbox_palette_text(),
                 'custom_color_css': mark_safe(custom_colors.css(custom_colors.stored(theme))),
             })
         except Exception:

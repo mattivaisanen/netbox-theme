@@ -7,6 +7,8 @@ New:
 - Theme editor (*Plugins → Theme*): one color scheme for every user, set
   separately for light and dark mode, with presets, a color picker per
   color and a live preview.
+- Text and icons on colored buttons, badges and widget headers are dark or
+  white, whichever reads better.
 - Custom colors from a color pack (.ase file): every swatch is added.
 - Custom colors: your own named colors, offered in every dashboard widget's
   color choice next to NetBox's.
