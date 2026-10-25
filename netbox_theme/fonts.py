@@ -101,7 +101,14 @@ SETTINGS = {
     'headings_letter_spacing': (0.0, 'number', -0.05, 0.3),
     'headings_case': ('none', 'choice', ('none', 'uppercase'), None),
     'tabular_numbers': (False, 'bool', None, None),
+    'match_size': (True, 'bool', None, None),
 }
+
+# x-height / em of NetBox's own fonts (Inter, Roboto Mono). With match_size,
+# other fonts are scaled (CSS font-size-adjust) so their lower case letters
+# are as tall as NetBox's, which keeps menus, tables and headings in
+# proportion whatever the font's own metrics.
+NETBOX_ASPECT = {'body': '0.545', 'headings': '0.545', 'mono': '0.528'}
 
 
 # --- Reading font files ----------------------------------------------------
@@ -301,6 +308,12 @@ def css_variables(typography, uploaded_roles):
         out['--nbt-headings-case'] = t['headings_case']
     if t['tabular_numbers']:
         out['--nbt-numbers'] = 'tabular-nums'
+    if t['match_size']:
+        for role, _label in ROLES:
+            if f'--nbt-font-{role}' in out:
+                out[f'--nbt-{role}-size-adjust'] = NETBOX_ASPECT[role]
+        if '--nbt-body-size-adjust' in out and '--nbt-headings-size-adjust' not in out:
+            out['--nbt-headings-size-adjust'] = NETBOX_ASPECT['headings']
     return out
 
 

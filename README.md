@@ -34,6 +34,8 @@ a live preview; nothing needs a restart.
   slots for the styles NetBox uses: Regular (enough on its own), Medium,
   Bold and Italic; headings and code take one file. An uploaded font is used
   as soon as you save, and an *In use* line says what each part shows.
+  Other fonts are scaled so their letters are as tall as NetBox's, so menus,
+  tables and headings keep their proportions (*Keep NetBox's text size*).
   *Advanced* has text size, line height, heading weight, letter spacing,
   heading case and tabular numbers (digits that line up in columns).
 - **Edition label.** Keep, hide or replace the "Community" text under the

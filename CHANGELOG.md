@@ -14,7 +14,8 @@ New:
 - Fonts: NetBox's, a system font or your own for body text, headings and
   code. Body text takes Regular, Medium, Bold and Italic files (Regular is
   enough); uploaded fonts are used right away. Advanced: size, line height,
-  heading weight, letter spacing, heading case, tabular numbers.
+  heading weight, letter spacing, heading case, tabular numbers. Other
+  fonts are scaled to NetBox's letter height so proportions stay the same.
 - A Reset button in each section of the Theme page.
 - Rack elevations follow the theme's page colors.
 - Colors for the top bar, card headers, table headers and form fields.

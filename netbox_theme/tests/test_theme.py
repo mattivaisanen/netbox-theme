@@ -121,6 +121,10 @@ class FontFileTests(SimpleTestCase):
         self.assertEqual(variables['--nbt-font-body'], '"nbt-body", sans-serif')
         self.assertTrue(variables['--nbt-font-mono'].startswith('ui-monospace'))
         self.assertEqual((variables['--nbt-font-size'], variables['--nbt-numbers']), ('1.0000rem', 'tabular-nums'))
+        # Other fonts are scaled to NetBox's letter height unless switched off.
+        self.assertEqual((variables['--nbt-body-size-adjust'], variables['--nbt-mono-size-adjust']), ('0.545', '0.528'))
+        unscaled = fonts.css_variables({**settings_, 'match_size': False}, {'body'})
+        self.assertNotIn('--nbt-body-size-adjust', unscaled)
         # "Uploaded" with no files keeps NetBox's font.
         self.assertNotIn('--nbt-font-body', fonts.css_variables(settings_, set()))
         self.assertEqual(fonts.css_variables(fonts.clean_typography({}), set()), {})

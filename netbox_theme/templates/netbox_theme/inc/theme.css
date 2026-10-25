@@ -165,11 +165,16 @@ html[data-bs-theme] {
 html[data-bs-theme] body {
   letter-spacing: var(--nbt-letter-spacing, normal);
   font-variant-numeric: var(--nbt-numbers, normal);
+  font-size-adjust: var(--nbt-body-size-adjust, none);
 }
+html[data-bs-theme] :is(code, pre, kbd, samp, .font-monospace) { font-size-adjust: var(--nbt-mono-size-adjust, none); }
+/* Icons are a font too; never rescale them. */
+html[data-bs-theme] :is(.mdi, .mdi::before) { font-size-adjust: none; }
 html[data-bs-theme] :is(h1, h2, h3, h4, h5, h6, .h1, .h2, .h3, .h4, .h5, .h6, .page-title, .card-title) {
   font-family: var(--nbt-font-headings, inherit);
   font-weight: var(--nbt-headings-weight, var(--tblr-font-weight-bold));
   letter-spacing: var(--nbt-headings-letter-spacing, inherit);
   text-transform: var(--nbt-headings-case, inherit);
+  font-size-adjust: var(--nbt-headings-size-adjust, inherit);
 }
 html[data-bs-theme] .rack_elevation svg { font-family: var(--nbt-font-body, inherit); }

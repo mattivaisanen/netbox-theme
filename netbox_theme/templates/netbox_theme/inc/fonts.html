@@ -135,6 +135,13 @@
           </select>
         </div>
       </div>
+      <input type="hidden" name="typography_match_size" value="">
+      <label class="form-check">
+        <input type="checkbox" name="typography_match_size" value="on" class="form-check-input" id="typography_match_size"
+               {% if typography.match_size %}checked{% endif %}>
+        <span class="form-check-label">{% trans "Keep NetBox's text size" %}</span>
+        <span class="form-text d-block">{% trans "Scales other fonts so their letters are as tall as NetBox's, so menus, tables and headings keep their proportions." %}</span>
+      </label>
       <input type="hidden" name="typography_tabular_numbers" value="">
       <label class="form-check">
         <input type="checkbox" name="typography_tabular_numbers" value="on" class="form-check-input"

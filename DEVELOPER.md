@@ -80,7 +80,12 @@ to the upload (`ThemeForm.with_new_fonts_in_use()`). `Theme.typography`
 holds `fonts.SETTINGS`; `fonts.css_variables()` emits a `--nbt-*` variable
 only for settings that differ from NetBox's, and the font section of
 `inc/theme.css` maps them onto Tabler's variables and heading rules, falling
-back to NetBox's values. The editor's script sets the same variables inline.
+back to NetBox's values. With `match_size` (on by default) a custom font gets
+CSS `font-size-adjust` set to the x-height ratio of the NetBox font it
+replaces (`fonts.NETBOX_ASPECT`: Inter 0.545, Roboto Mono 0.528, read from
+their `OS/2.sxHeight`), so its lower case letters are as tall as NetBox's;
+Material Design Icons are excluded. The editor's script sets the same
+variables inline.
 
 ## Custom colors and status colors
 

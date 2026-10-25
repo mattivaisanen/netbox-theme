@@ -455,6 +455,21 @@
       control.addEventListener(control.type === 'checkbox' || control.tagName === 'SELECT' ? 'change' : 'input', update);
     });
 
+    // Fonts: other fonts scaled to NetBox's letter height (fonts.NETBOX_ASPECT).
+    var matchSize = document.getElementById('typography_match_size');
+    function applySizeAdjust() {
+      var pick = function (role) { return document.getElementById('typography_' + role + '_family').value; };
+      var on = matchSize && matchSize.checked;
+      root.style.setProperty('--nbt-body-size-adjust', on && pick('body') ? '0.545' : 'none');
+      root.style.setProperty('--nbt-headings-size-adjust', on && (pick('headings') || pick('body')) ? '0.545' : 'none');
+      root.style.setProperty('--nbt-mono-size-adjust', on && pick('mono') ? '0.528' : 'none');
+    }
+    if (matchSize) { matchSize.addEventListener('change', applySizeAdjust); }
+    document.querySelectorAll('select[data-font-role]').forEach(function (select) {
+      select.addEventListener('change', applySizeAdjust);
+    });
+    applySizeAdjust();
+
     // Fonts: the "In use" line says which font each role uses.
     function showFontsInUse() {
       document.querySelectorAll('select[data-font-role]').forEach(function (select) {
@@ -527,6 +542,7 @@
         document.querySelectorAll('.status-color select').forEach(function (select) { setValue(select, ''); });
       },
       fonts: function () {
+        if (matchSize) { setValue(matchSize, true); }
         document.querySelectorAll('[data-font-var]').forEach(function (control) {
           if (control.type === 'checkbox') { setValue(control, false); return; }
           setValue(control, control.dataset.default !== undefined ? control.dataset.default : '');
