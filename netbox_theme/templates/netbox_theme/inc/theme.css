@@ -138,3 +138,14 @@ html[data-bs-theme] .rack_elevation svg {
   --nbx-rack-link-color: var(--nbt-link);
   --nbx-rack-unit-color: var(--nbt-muted);
 }
+
+/* Narrow screens: the sidebar collapses into a top bar with the menu button
+   on the left and the user menu on the right, so the logo sits wherever
+   their widths leave it. Center it on the bar instead. */
+@media (max-width: 991.98px) {
+  html[data-bs-theme] .navbar-vertical.navbar-expand-lg > .container-fluid { position: relative; }
+  html[data-bs-theme] .navbar-vertical.navbar-expand-lg .navbar-brand {
+    position: absolute; left: 50%; transform: translateX(-50%); max-width: 50%;
+  }
+  html[data-bs-theme] .navbar-vertical.navbar-expand-lg .navbar-brand-image { max-width: 100%; object-fit: contain; }
+}

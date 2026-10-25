@@ -240,7 +240,9 @@ class PageTests(TestCase):
         exported = self.client.get(reverse(URL + 'theme_export'))
         self.assertIn('attachment', exported['Content-Disposition'])
         Theme.reset()
+        Theme(logo_light=logos.to_data_uri(SVG)).save()  # A file without logos keeps this one.
         upload = SimpleUploadedFile('theme.json', exported.content, content_type='application/json')
         self.client.post(reverse(URL + 'theme_import'), {'file': upload})
         theme = Theme.objects.get()
         self.assertEqual((theme.name, theme.dark['primary']), ('Exported', '#abcdef'))
+        self.assertEqual(logos.from_data_uri(theme.logo_light)[1], SVG)

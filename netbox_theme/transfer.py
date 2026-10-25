@@ -11,7 +11,7 @@ Theme files: export the saved theme as JSON and import one back.
 
 Imports are checked like the editor's input: colors must be #rrggbb (unknown
 tokens are ignored, missing ones get NetBox's color) and logos are re-checked
-as uploads.
+as uploads. A logo the file leaves out or empty keeps the current one.
 """
 import json
 
@@ -67,7 +67,10 @@ def load(raw):
         'edition_text': edition_text.strip()[:50],
         'light': colors.validate(data.get('light', {}), 'light'),
         'dark': colors.validate(data.get('dark', {}), 'dark'),
-        **{f'logo_{slot}': logos.check_data_uri(data.get(f'logo_{slot}') or '') for slot in logos.SLOTS},
+        # A file without a logo keeps the current one (themes made by hand or
+        # from a palette usually have none); Remove in the editor clears it.
+        **{f'logo_{slot}': logos.check_data_uri(data[f'logo_{slot}'])
+           for slot in logos.SLOTS if data.get(f'logo_{slot}')},
         **_logo_size(data),
         'custom_colors': custom,
         'status_colors': status_colors,

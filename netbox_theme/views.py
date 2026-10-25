@@ -111,7 +111,7 @@ class ThemeExportView(ThemeAdminMixin, View):
 
 
 class ThemeImportView(ThemeAdminMixin, View):
-    """Replace the saved theme (colors and logos) with a theme file."""
+    """Replace the saved theme with a theme file; logos the file has none for stay."""
     def post(self, request):
         form = ThemeImportForm(request.POST, request.FILES)
         if not form.is_valid():
