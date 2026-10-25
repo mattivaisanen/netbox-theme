@@ -61,6 +61,7 @@ class ThemeView(ThemeAdminMixin, View):
             'preset_colors': {slug: values for slug, _label, values in colors.PRESETS},
             'import_form': ThemeImportForm(),
             'custom_colors': form.custom_color_rows(),
+            'max_custom_colors': custom_colors.MAX_COLORS,
             'status_colors': ('primary', 'secondary', 'success', 'info', 'warning', 'danger'),
             'status_rows': self.status_rows(form),
             'netbox_colors': statuses.NETBOX_COLORS,

@@ -90,7 +90,10 @@ variables inline.
 ## Custom colors and status colors
 
 `custom_colors.py`: named colors, used by widgets and statuses as
-`nbt-<slug>`.
+`nbt-<slug>`. Color packs (Adobe Swatch Exchange, .ase) are read in the
+editor's script (`aseSwatches()`): RGB, CMYK (simple conversion, no color
+profile), Gray and Lab swatches become rows like *Add color* makes, so the
+server only ever sees the usual form fields.
 
 A dashboard widget's color is a name NetBox puts in a class:
 `card-header text-bg-{{ widget.color }}`. `custom_colors.install()` (from

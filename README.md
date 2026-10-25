@@ -17,7 +17,9 @@ a live preview; nothing needs a restart.
   badges turns dark or white, whichever reads better.
 - **Custom colors.** Add your own named colors (with a light and a dark mode
   value). Dashboard widgets list them under *Theme* in their *Color* choice,
-  next to NetBox's Blue, Green and so on, which stay as they are.
+  next to NetBox's Blue, Green and so on, which stay as they are. *Add
+  colors from a color pack* reads an Adobe Swatch Exchange file (.ase, as in
+  most brand kits) and adds every swatch.
 - **Status colors.** Pick the badge color of each status (Active, Planned,
   Offline...), from NetBox's colors or your own. It applies on every object
   type, NetBox's and plugins', in lists and on object pages.

@@ -230,6 +230,11 @@
       <button type="button" class="btn btn-outline-primary" id="custom-color-add">
         <i class="mdi mdi-plus-thick" aria-hidden="true"></i> {% trans "Add color" %}
       </button>
+      <label class="btn btn-outline-secondary mb-0" title="{% trans "Adobe Swatch Exchange file, as exported by Illustrator, Photoshop or InDesign, or found in brand kits" %}">
+        <input type="file" accept=".ase" hidden id="custom-color-pack">
+        <i class="mdi mdi-palette" aria-hidden="true"></i> {% trans "Add colors from a color pack (.ase)" %}
+      </label>
+      <span class="ms-2 text-muted small" id="custom-color-pack-result" role="status"></span>
     </div>
   </div>
 
@@ -424,6 +429,76 @@
       row.querySelector('[name=custom_color_name]').focus();
     });
     new MutationObserver(drawSamples).observe(root, { attributes: true, attributeFilter: ['data-bs-theme'] });
+
+    // Color pack: read an Adobe Swatch Exchange (.ase) file in the browser and add each swatch
+    // as a custom color (same value in both modes), skipping names already there. Saved with Save.
+    function aseSwatches(buffer) {
+      var view = new DataView(buffer), swatches = [], at = 12;
+      if (view.getUint32(0) !== 0x41534546) { throw new Error('not an .ase file'); }  // "ASEF"
+      var hex = function (r, g, b) {
+        return '#' + [r, g, b].map(function (v) {
+          return Math.round(Math.min(1, Math.max(0, v)) * 255).toString(16).padStart(2, '0');
+        }).join('');
+      };
+      var fromLab = function (l, a, b) {
+        var y = (l + 16) / 116, x = a / 500 + y, z = y - b / 200;
+        var f = function (t) { return t * t * t > 0.008856 ? t * t * t : (t - 16 / 116) / 7.787; };
+        x = 0.95047 * f(x); y = f(y); z = 1.08883 * f(z);
+        var gamma = function (c) { return c > 0.0031308 ? 1.055 * Math.pow(c, 1 / 2.4) - 0.055 : 12.92 * c; };
+        return hex(gamma(3.2406 * x - 1.5372 * y - 0.4986 * z), gamma(-0.9689 * x + 1.8758 * y + 0.0415 * z),
+                   gamma(0.0557 * x - 0.2040 * y + 1.0570 * z));
+      };
+      for (var i = 0, count = view.getUint32(8); i < count && at + 6 <= buffer.byteLength; i++) {
+        var type = view.getUint16(at), length = view.getUint32(at + 2), block = at + 6;
+        at = block + length;
+        if (type !== 0x0001) { continue; }  // Group starts and ends carry no color.
+        var nameLength = view.getUint16(block), name = '';
+        for (var c = 0; c < nameLength; c++) { name += String.fromCharCode(view.getUint16(block + 2 + c * 2)); }
+        name = name.replace(/\u0000/g, '').trim();
+        var p = block + 2 + nameLength * 2;
+        var model = String.fromCharCode(view.getUint8(p), view.getUint8(p + 1), view.getUint8(p + 2), view.getUint8(p + 3));
+        var v = function (n) { return view.getFloat32(p + 4 + n * 4); };
+        var color = null;
+        if (model === 'RGB ') { color = hex(v(0), v(1), v(2)); }
+        else if (model === 'CMYK') { color = hex((1 - v(0)) * (1 - v(3)), (1 - v(1)) * (1 - v(3)), (1 - v(2)) * (1 - v(3))); }
+        else if (model === 'Gray') { color = hex(v(0), v(0), v(0)); }
+        else if (model === 'LAB ') { color = fromLab(v(0) * 100, v(1), v(2)); }
+        if (color && name) { swatches.push({ name: name.slice(0, 50), color: color }); }
+      }
+      return swatches;
+    }
+    var pack = document.getElementById('custom-color-pack');
+    var packResult = document.getElementById('custom-color-pack-result');
+    pack.addEventListener('change', function () {
+      var file = pack.files[0];
+      if (!file) { return; }
+      file.arrayBuffer().then(function (buffer) {
+        var swatches;
+        try { swatches = aseSwatches(buffer); } catch (error) {
+          packResult.textContent = '{% trans "Not a color pack (.ase) file." as not_ase %}{{ not_ase|escapejs }}';
+          return;
+        }
+        var existing = new Set(Array.from(rows.querySelectorAll('[name=custom_color_name]')).map(function (input) {
+          return input.value.trim().toLowerCase();
+        }));
+        var added = 0, room = {{ max_custom_colors }} - rows.querySelectorAll('.custom-color').length;
+        swatches.forEach(function (swatch) {
+          if (existing.has(swatch.name.toLowerCase()) || added >= room) { return; }
+          existing.add(swatch.name.toLowerCase());
+          var row = document.getElementById('custom-color-template').content.firstElementChild.cloneNode(true);
+          row.querySelector('[name=custom_color_name]').value = swatch.name;
+          row.querySelector('[name=custom_color_light]').value = swatch.color;
+          row.querySelector('[name=custom_color_dark]').value = swatch.color;
+          rows.appendChild(row);
+          wire(row);
+          added++;
+        });
+        drawSamples();
+        packResult.textContent = '{% trans "{added} of {total} colors added; Save to keep them." as pack_done %}{{ pack_done|escapejs }}'
+          .replace('{added}', added).replace('{total}', swatches.length);
+        pack.value = '';
+      });
+    });
 
     // Status colors: the sample badge shows the chosen color.
     document.querySelectorAll('.status-color select').forEach(function (select) {
