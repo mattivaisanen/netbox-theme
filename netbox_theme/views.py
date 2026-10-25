@@ -64,6 +64,9 @@ class ThemeView(ThemeAdminMixin, View):
             'max_custom_colors': custom_colors.MAX_COLORS,
             'status_colors': ('primary', 'secondary', 'success', 'info', 'warning', 'danger'),
             'status_rows': self.status_rows(form),
+            # The sample table's badges, drawn in the colors being edited.
+            'sample_statuses': [(value, label, chosen or default) for value, label, chosen, default in self.status_rows(form)
+                                if value in ('active', 'planned', 'offline', 'failed')],
             'netbox_colors': statuses.NETBOX_COLORS,
             'custom_color_options': self.valid_custom_colors(form),
             'logo_size': [form[f] for f in ('logo_height', 'logo_margin_top', 'logo_margin_bottom')],

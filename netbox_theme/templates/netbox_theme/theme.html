@@ -193,12 +193,16 @@
               <span class="badge text-bg-{{ color }}">{{ color }}</span>
             {% endfor %}
           </div>
-          <div class="alert alert-info" role="alert">{% trans "An info message with" %} <a href="#">{% trans "a link" %}</a>.</div>
+          <div class="alert alert-info" role="alert">{% trans "An info message with" %} <a href="#" class="alert-link">{% trans "a link" %}</a>.</div>
           <table class="table table-hover attr-table mb-3">
             <thead><tr><th>{% trans "Name" %}</th><th>{% trans "Status" %}</th></tr></thead>
             <tbody>
-              <tr><td><a href="#">switch-01</a></td><td><span class="badge text-bg-green">{% trans "Active" %}</span></td></tr>
-              <tr><td><a href="#">switch-02</a></td><td><span class="badge text-bg-yellow">{% trans "Planned" %}</span></td></tr>
+              {% for value, label, color in sample_statuses %}
+                <tr>
+                  <td><a href="#">switch-0{{ forloop.counter }}</a></td>
+                  <td><span class="badge text-bg-{{ color }}" data-sample-status="{{ value }}">{{ label }}</span></td>
+                </tr>
+              {% endfor %}
             </tbody>
           </table>
           <p class="text-muted mb-0">{% trans "Muted text, as in help texts and empty fields." %}</p>
@@ -415,6 +419,14 @@
         sample.style.color = readableText(color);
         sample.textContent = row.querySelector('[name=custom_color_name]').value || '\u00a0';
       });
+      // Saved custom colors (they have a slug) as widgets and badges use them, in the colors being edited.
+      document.getElementById('netbox-theme-custom-colors').textContent = Array.from(rows.querySelectorAll('.custom-color'))
+        .map(function (row) {
+          var slug = row.querySelector('[name=custom_color_slug]').value;
+          var color = row.querySelector('[name=custom_color_' + mode + ']').value;
+          return /^[a-z0-9-]+$/.test(slug) ? 'html[data-bs-theme] .text-bg-nbt-' + slug + ' { background-color: ' + color +
+            ' !important; color: ' + readableText(color) + ' !important; }' : '';
+        }).join(' ');
     }
     function wire(row) {
       row.querySelectorAll('input').forEach(function (input) { input.addEventListener('input', drawSamples); });
@@ -505,6 +517,8 @@
       select.addEventListener('change', function () {
         var sample = select.parentNode.querySelector('.status-color-sample');
         sample.className = 'badge status-color-sample text-bg-' + (select.value || sample.dataset.default);
+        var inSample = document.querySelector('[data-sample-status="' + select.name.replace('status_color_', '') + '"]');
+        if (inSample) { inSample.className = 'badge text-bg-' + (select.value || sample.dataset.default); }
       });
     });
 
