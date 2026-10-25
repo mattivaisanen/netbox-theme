@@ -17,9 +17,9 @@ class Migration(migrations.Migration):
             name='FontFile',
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False)),
-                ('family', models.CharField(max_length=60)),
-                ('weight', models.PositiveSmallIntegerField(default=400)),
-                ('style', models.CharField(default='normal', max_length=10)),
+                ('role', models.CharField(max_length=10)),
+                ('slot', models.CharField(max_length=10)),
+                ('detected', models.CharField(blank=True, max_length=100)),
                 ('variable', models.BooleanField(default=False)),
                 ('format', models.CharField(max_length=10)),
                 ('filename', models.CharField(blank=True, max_length=200)),
@@ -29,7 +29,10 @@ class Migration(migrations.Migration):
             options={
                 'verbose_name': 'font file',
                 'verbose_name_plural': 'font files',
-                'ordering': ('family', 'weight', 'style'),
+                'ordering': ('role', 'slot'),
+                'constraints': [
+                    models.UniqueConstraint(fields=('role', 'slot'), name='netbox_theme_fontfile_role_slot'),
+                ],
             },
         ),
     ]

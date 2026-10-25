@@ -112,14 +112,18 @@ class FontFileTests(SimpleTestCase):
 
     def test_typography(self):
         with self.assertRaises(ValidationError):
-            fonts.clean_typography({'body_family': 'font:Missing'}, [])
+            fonts.clean_typography({'body_family': 'font:Missing'})
         with self.assertRaises(ValidationError):
-            fonts.clean_typography({'base_size': 40}, [])
-        variables = fonts.css_variables(fonts.clean_typography(
-            {'body_family': 'font:Acme "Sans"', 'base_size': 16, 'tabular_numbers': 'on'}, ['Acme "Sans"']))
-        self.assertEqual(variables['--nbt-font-body'], '"Acme\\000020\\000022Sans\\000022", sans-serif')
+            fonts.clean_typography({'base_size': 40})
+        settings_ = fonts.clean_typography({'body_family': 'uploaded', 'mono_family': 'system-mono',
+                                            'base_size': 16, 'tabular_numbers': 'on'})
+        variables = fonts.css_variables(settings_, {'body'})
+        self.assertEqual(variables['--nbt-font-body'], '"nbt-body", sans-serif')
+        self.assertTrue(variables['--nbt-font-mono'].startswith('ui-monospace'))
         self.assertEqual((variables['--nbt-font-size'], variables['--nbt-numbers']), ('1.0000rem', 'tabular-nums'))
-        self.assertEqual(fonts.css_variables(fonts.clean_typography({}, [])), {})
+        # "Uploaded" with no files keeps NetBox's font.
+        self.assertNotIn('--nbt-font-body', fonts.css_variables(settings_, set()))
+        self.assertEqual(fonts.css_variables(fonts.clean_typography({}), set()), {})
 
 
 class LogoTests(SimpleTestCase):
@@ -275,32 +279,33 @@ class PageTests(TestCase):
         self.assertEqual(self.client.get(reverse(URL + 'logo', args=['nope'])).status_code, 404)
 
     def test_fonts(self):
-        upload = SimpleUploadedFile('acme.ttf', sfnt('Acme Sans', 400))
-        self.client.post(reverse(URL + 'theme'), self.form_data(font_files=[upload]))
+        regular = SimpleUploadedFile('acme.ttf', sfnt('Acme Sans', 400))
+        self.client.post(reverse(URL + 'theme'), self.form_data(font_body_regular=regular))
         font = FontFile.objects.get()
-        self.assertEqual((font.family, font.weight, font.format), ('Acme Sans', 400, 'ttf'))
-        # Correct the weight and use the family for body text.
-        response = self.client.post(reverse(URL + 'theme'), self.form_data(**{
-            f'font_{font.pk}_family': 'Acme Sans', f'font_{font.pk}_weight': '300', f'font_{font.pk}_style': 'normal',
-            'typography_body_family': 'font:Acme Sans', 'typography_line_height': '1.6',
-        }))
-        self.assertEqual(response.status_code, 302)
-        self.assertContains(self.client.get(reverse(URL + 'theme')), f'name="font_{font.pk}_family"')
+        self.assertEqual((font.role, font.slot, font.detected, font.format), ('body', 'regular', 'Acme Sans Regular', 'ttf'))
+        # A font is put to use as soon as it is uploaded, while body text still had NetBox's.
+        self.assertEqual(Theme.objects.get().typography['body_family'], 'uploaded')
         page = self.client.get(reverse('home'))
-        self.assertContains(page, 'font-family: "Acme\\000020Sans"; src: url("' + reverse(URL + 'font', args=[font.pk]))
-        self.assertContains(page, 'font-weight: 300;')
-        self.assertContains(page, '--nbt-font-body: "Acme\\000020Sans", sans-serif;')
-        self.assertContains(page, '--nbt-line-height: 1.6;')
+        self.assertContains(page, 'font-family: "nbt-body"; src: url("' + reverse(URL + 'font', args=[font.pk]))
+        self.assertContains(page, 'font-weight: 100 449; font-style: normal;')
+        self.assertContains(page, '--nbt-font-body: "nbt-body", sans-serif;')
         served = self.client.get(reverse(URL + 'font', args=[font.pk]))
         self.assertEqual((served['Content-Type'], served.content[:4]), ('font/ttf', b'\x00\x01\x00\x00'))
+        self.assertContains(self.client.get(reverse(URL + 'theme')), 'Acme Sans Regular')
+
+        # A second upload to the same slot replaces the first; Remove empties a slot.
+        bold = SimpleUploadedFile('acme-bold.ttf', sfnt('Acme Sans', 700))
+        self.client.post(reverse(URL + 'theme'), self.form_data(
+            typography_body_family='uploaded', font_body_bold=bold, font_body_regular_remove='on'))
+        self.assertEqual([(f.slot, f.detected) for f in FontFile.objects.all()], [('bold', 'Acme Sans Bold')])
 
         # Export and import carry fonts; restoring defaults removes them.
         exported = self.client.get(reverse(URL + 'theme_export')).content
         self.client.post(reverse(URL + 'theme_reset'))
         self.assertFalse(FontFile.objects.exists())
         self.client.post(reverse(URL + 'theme_import'), {'file': SimpleUploadedFile('t.json', exported)})
-        self.assertEqual(FontFile.objects.get().weight, 300)
-        self.assertEqual(Theme.objects.get().typography['body_family'], 'font:Acme Sans')
+        self.assertEqual(FontFile.objects.get().slot, 'bold')
+        self.assertEqual(Theme.objects.get().typography['body_family'], 'uploaded')
 
     def test_bad_input_is_not_saved(self):
         response = self.client.post(reverse(URL + 'theme'), self.form_data(

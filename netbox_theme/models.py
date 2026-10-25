@@ -6,6 +6,9 @@ defaults" deletes it. A plain Django model rather than a NetBoxModel: it is
 a setting, not inventory, so it has no list, tags or REST API, and an
 approval plugin does not gate it.
 """
+from dataclasses import dataclass
+from datetime import datetime
+
 from django.core.cache import cache
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
@@ -15,8 +18,11 @@ from . import colors, logos
 
 __all__ = ('EditionChoices', 'FontFile', 'Theme')
 
-CACHE_KEY = 'netbox_theme:current'
-FONTS_CACHE_KEY = 'netbox_theme:fonts'
+# Bump CACHE_VERSION whenever a model changes, so no process reads objects
+# another version cached.
+CACHE_VERSION = 2
+CACHE_KEY = f'netbox_theme:v{CACHE_VERSION}:current'
+FONTS_CACHE_KEY = f'netbox_theme:v{CACHE_VERSION}:fonts'
 
 
 class EditionChoices(models.TextChoices):
@@ -114,12 +120,14 @@ class Theme(models.Model):
 
 class FontFile(models.Model):
     """
-    One uploaded font file (one weight and style of a family, or a variable
-    font with every weight). Stored in the database like logos.
+    The font file in one slot of a role (fonts.SLOTS): body text Regular,
+    Medium, Bold, Italic; the heading font; the code font. Stored in the
+    database like logos.
     """
-    family = models.CharField(verbose_name=_('family'), max_length=60)
-    weight = models.PositiveSmallIntegerField(verbose_name=_('weight'), default=400)
-    style = models.CharField(verbose_name=_('style'), max_length=10, default='normal')
+    role = models.CharField(verbose_name=_('role'), max_length=10)
+    slot = models.CharField(verbose_name=_('slot'), max_length=10)
+    # What the file says it is ("Inter SemiBold Italic"), shown to users.
+    detected = models.CharField(verbose_name=_('detected'), max_length=100, blank=True)
     variable = models.BooleanField(verbose_name=_('variable weight'), default=False)
     format = models.CharField(verbose_name=_('format'), max_length=10)
     filename = models.CharField(verbose_name=_('file name'), max_length=200, blank=True)
@@ -127,12 +135,13 @@ class FontFile(models.Model):
     updated = models.DateTimeField(auto_now=True)
 
     class Meta:
-        ordering = ('family', 'weight', 'style')
+        ordering = ('role', 'slot')
+        constraints = [models.UniqueConstraint(fields=('role', 'slot'), name='netbox_theme_fontfile_role_slot')]
         verbose_name = _('font file')
         verbose_name_plural = _('font files')
 
     def __str__(self):
-        return f'{self.family} {self.weight} {self.style}'
+        return f'{self.role} {self.slot}: {self.filename}'
 
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
@@ -149,18 +158,52 @@ class FontFile(models.Model):
         cache.delete(FONTS_CACHE_KEY)
 
     @classmethod
-    def listed(cls):
-        """Every font file without its data, cached until one changes."""
-        fonts = cache.get(FONTS_CACHE_KEY)
-        if fonts is None:
-            fonts = list(cls.objects.defer('data'))
-            cache.set(FONTS_CACHE_KEY, fonts, None)
-        return fonts
+    def put(cls, role, slot, info, raw, filename):
+        """Store a font file in a slot, replacing what was there."""
+        cls.objects.filter(role=role, slot=slot).delete()
+        weight_names = {100: 'Thin', 200: 'ExtraLight', 300: 'Light', 400: 'Regular', 500: 'Medium',
+                        600: 'SemiBold', 700: 'Bold', 800: 'ExtraBold', 900: 'Black'}
+        detected = f"{info['family']} {'Variable' if info['variable'] else weight_names[info['weight']]}"
+        if info['style'] == 'italic':
+            detected += ' Italic'
+        cls(role=role, slot=slot, detected=detected[:100], variable=info['variable'], format=info['format'],
+            filename=filename[:200], data=raw).save()
 
     @classmethod
-    def families(cls):
-        return sorted({font.family for font in cls.listed()})
+    def listed(cls):
+        """
+        Every font file as a plain record (no data), cached until one changes.
+        Plain values, not model instances: a cached instance with a deferred
+        field reloads it from the database, and fails if the row is gone.
+        """
+        records = cache.get(FONTS_CACHE_KEY)
+        if records is None:
+            records = list(cls.objects.values('pk', 'role', 'slot', 'detected', 'variable', 'format', 'filename',
+                                              'updated'))
+            cache.set(FONTS_CACHE_KEY, records, None)
+        return [FontRecord(**record) for record in records]
+
+    @classmethod
+    def uploaded_roles(cls):
+        return {font.role for font in cls.listed()}
 
     @property
     def version(self):
         return int(self.updated.timestamp()) if self.updated else 0
+
+
+@dataclass(frozen=True)
+class FontRecord:
+    """A FontFile without its data (FontFile.listed())."""
+    pk: int
+    role: str
+    slot: str
+    detected: str
+    variable: bool
+    format: str
+    filename: str
+    updated: datetime
+
+    @property
+    def version(self):
+        return int(self.updated.timestamp())

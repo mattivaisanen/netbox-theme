@@ -57,21 +57,30 @@ import, a regex on the form).
 
 ## Fonts
 
-`models.FontFile` holds uploaded font files (database, like logos), served
-by `views.FontView` with a year-long cache. `fonts.read()` checks the format
-by its magic bytes and reads family (name ID 16, else 1), weight
-(`OS/2.usWeightClass`), style (`OS/2.fsSelection` bit 0, else
-`head.macStyle`) and whether it is variable (`fvar`) from TTF, OTF and WOFF
-(zlib) tables. WOFF2 needs Brotli, which the standard library lacks, so its
-values are guessed from the file name; the editor lets users correct them.
-`FontFile.listed()` (no data) is cached and used for `@font-face` rules on
-every page.
+Fonts are chosen per role (body text, headings, code), each from a source:
+NetBox's, a system stack, or the role's uploaded files (`fonts.SOURCES`).
+Uploads go into fixed slots (`fonts.SLOTS`): body text Regular, Medium,
+Bold, Italic (the weights NetBox's CSS uses: 400, 500, 600 and rare italic),
+one file for headings and one for code. Every file of a role is declared
+under one family, `nbt-<role>`, with a weight range per slot
+(Regular 100-449, Medium 450-549, Bold 550-900), so the browser draws a
+missing slot from the nearest file; a variable font covers 100-900. What a
+file calls its own family does not matter.
 
-`Theme.typography` holds `fonts.SETTINGS`. `fonts.css_variables()` emits a
-`--nbt-*` variable only for settings that differ from NetBox's; the font
-section of `inc/theme.css` maps them onto Tabler's `--tblr-font-*` /
-`--tblr-body-*` variables and heading rules, falling back to NetBox's values.
-The editor's script sets the same variables inline as controls change.
+`models.FontFile` (database, like logos; one per role and slot) is served
+by `views.FontView` with a year-long cache. `fonts.read()` checks the format
+by its magic bytes and reads family, weight, style and `fvar` from TTF, OTF
+and WOFF tables (WOFF2 needs Brotli, so its values come from the file name);
+they are only shown to the user (`detected`). `FontFile.listed()` caches
+plain `FontRecord`s, not model instances, under a versioned key
+(`CACHE_VERSION`, bump it when a model changes).
+
+A role that gets its first upload while it still has NetBox's font switches
+to the upload (`ThemeForm.with_new_fonts_in_use()`). `Theme.typography`
+holds `fonts.SETTINGS`; `fonts.css_variables()` emits a `--nbt-*` variable
+only for settings that differ from NetBox's, and the font section of
+`inc/theme.css` maps them onto Tabler's variables and heading rules, falling
+back to NetBox's values. The editor's script sets the same variables inline.
 
 ## Custom colors and status colors
 

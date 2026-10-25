@@ -1,10 +1,11 @@
 from django import forms
+from django.core.cache import cache
 from django.core.exceptions import ValidationError
 from django.core.validators import RegexValidator
 from django.utils.translation import gettext_lazy as _
 
 from . import colors, custom_colors, fonts, logos, statuses, transfer
-from .models import EditionChoices, FontFile, Theme
+from .models import FONTS_CACHE_KEY, EditionChoices, FontFile, Theme
 
 __all__ = ('ThemeForm', 'ThemeImportForm')
 
@@ -19,9 +20,8 @@ class ThemeForm(forms.Form):
     (`light_primary`, `dark_primary`, ...), a logo per mode with its size,
     the edition label, custom colors (rows of `custom_color_slug`, `_name`,
     `_light`, `_dark` inputs), status colors (`status_color_<value>`
-    selects), font files (`font_files` uploads; `font_<id>_family`,
-    `_weight`, `_style`, `_delete` for saved ones) and typography
-    (`typography_<setting>`). Everything after the edition label is read in
+    selects), font files (`font_<role>_<slot>` uploads and `_remove`
+    checkboxes) and typography (`typography_<setting>`). Everything after the edition label is read in
     clean().
     """
     name = forms.CharField(label=_('Name'), max_length=100)
@@ -50,6 +50,7 @@ class ThemeForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.fonts_put_in_use = []
         hex_color = RegexValidator(colors.HEX, _('Enter a color as #rrggbb.'))
         for mode in colors.MODES:
             for _group, _label, tokens in colors.GROUPS:
@@ -87,44 +88,40 @@ class ThemeForm(forms.Form):
             data['status_colors'] = statuses.clean(
                 self.status_color_values(), {entry['slug'] for entry in data['custom_colors']},
             )
-            data['font_uploads'], data['font_edits'] = self.clean_fonts()
-            data['typography'] = fonts.clean_typography(self.typography_values(), self.resulting_families(data))
+            data['font_uploads'], data['font_removals'] = self.clean_fonts()
+            data['typography'] = fonts.clean_typography(self.with_new_fonts_in_use(data))
         except ValidationError as error:
             self.add_error(None, error)
         return data
 
     def clean_fonts(self):
-        """([(info, bytes, filename)] to add, {font: {changes} or None to delete})."""
-        uploads = []
-        for upload in self.files.getlist('font_files') if self.files else []:
-            raw = upload.read()
-            uploads.append((fonts.read(raw, upload.name), raw, upload.name))
-        edits = {}
-        for font in FontFile.listed():
-            prefix = f'font_{font.pk}_'
-            if self.data.get(prefix + 'delete'):
-                edits[font] = None
-                continue
-            if prefix + 'family' not in self.data:
-                continue
-            weight, style = self.data.get(prefix + 'weight'), self.data.get(prefix + 'style')
-            if str(weight) not in {str(w) for w in fonts.WEIGHTS} or style not in fonts.STYLES:
-                raise ValidationError(_('{name}: pick a weight and a style.').format(name=font.filename or font.family))
-            edits[font] = {'family': fonts.clean_family(self.data[prefix + 'family']), 'weight': int(weight),
-                           'style': style, 'variable': bool(self.data.get(prefix + 'variable'))}
-        if len(FontFile.listed()) - sum(1 for v in edits.values() if v is None) + len(uploads) > fonts.MAX_FILES:
-            raise ValidationError(_('At most {count} font files.').format(count=fonts.MAX_FILES))
-        return uploads, edits
+        """
+        ({(role, slot): (info, bytes, filename)} to store, {(role, slot), ...}
+        to remove). Uploads come from `font_<role>_<slot>` inputs.
+        """
+        uploads, removals = {}, set()
+        for role, slot in sorted(fonts.ALL_SLOTS):
+            upload = self.files.get(f'font_{role}_{slot}') if self.files else None
+            if upload:
+                raw = upload.read()
+                uploads[(role, slot)] = (fonts.read(raw, upload.name), raw, upload.name)
+            elif self.data.get(f'font_{role}_{slot}_remove'):
+                removals.add((role, slot))
+        return uploads, removals
 
-    @staticmethod
-    def resulting_families(data):
-        families = set()
-        for font in FontFile.listed():
-            change = data['font_edits'].get(font, {})
-            if change is not None:
-                families.add(change.get('family', font.family))
-        families |= {info['family'] for info, _raw, _name in data['font_uploads']}
-        return families
+    def with_new_fonts_in_use(self, data):
+        """
+        The typography settings, where a role that gets its first upload and
+        still has NetBox's font switches to it: anyone who uploads a font
+        expects to see it. `self.fonts_put_in_use` names those roles.
+        """
+        values = dict(self.typography_values())
+        self.fonts_put_in_use = []
+        for role in sorted({role for role, _slot in data['font_uploads']}):
+            if not values.get(f'{role}_family'):
+                values[f'{role}_family'] = 'uploaded'
+                self.fonts_put_in_use.append(dict(fonts.ROLES)[role])
+        return values
 
     def typography_values(self):
         """Typography settings as submitted (or initial)."""
@@ -134,19 +131,13 @@ class ThemeForm(forms.Form):
         return {key: value for key, value in values.items() if value is not None or key == 'tabular_numbers'}
 
     def save_fonts(self):
-        """Apply font edits, deletions and uploads (an upload replaces the same family, weight and style)."""
+        """Store uploads in their slots and empty the slots marked Remove."""
         data = self.cleaned_data
-        for font, change in data['font_edits'].items():
-            font = FontFile.objects.get(pk=font.pk)
-            if change is None:
-                font.delete()
-            else:
-                for field, value in change.items():
-                    setattr(font, field, value)
-                font.save()
-        for info, raw, filename in data['font_uploads']:
-            FontFile.objects.filter(family=info['family'], weight=info['weight'], style=info['style']).delete()
-            FontFile(data=raw, filename=filename[:200], **info).save()
+        for role, slot in data['font_removals']:
+            FontFile.objects.filter(role=role, slot=slot).delete()
+        for (role, slot), (info, raw, filename) in data['font_uploads'].items():
+            FontFile.put(role, slot, info, raw, filename)
+        cache.delete(FONTS_CACHE_KEY)
 
     def status_color_values(self):
         """{status value: color} as submitted (or initial); '' is NetBox's."""

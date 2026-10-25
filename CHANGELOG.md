@@ -11,9 +11,11 @@ New:
   color choice next to NetBox's.
 - Status colors: one badge color per status (Active, Planned...) on every
   object type, from NetBox's colors or your own.
-- Fonts: upload font files and choose fonts for body text, headings and
-  monospace, with size, line height, weights, letter spacing, heading case
-  and tabular numbers.
+- Fonts: NetBox's, a system font or your own for body text, headings and
+  code. Body text takes Regular, Medium, Bold and Italic files (Regular is
+  enough); uploaded fonts are used right away. Advanced: size, line height,
+  heading weight, letter spacing, heading case, tabular numbers.
+- A Reset button in each section of the Theme page.
 - Rack elevations follow the theme's page colors.
 - Colors for the top bar, card headers, table headers and form fields.
 - Login page logo, set separately from the sidebar logo.

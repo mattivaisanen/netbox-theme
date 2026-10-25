@@ -1,18 +1,23 @@
 """
-Fonts: uploaded font files and the typography settings that use them.
+Fonts: one font per role (body text, headings, code), each from a few fixed
+file slots, plus the typography settings that use them.
 
-Font files (models.FontFile) are stored in the database like logos and served
-by views.FontView. Their family, weight and style are read from the file
-(the `name`, `OS/2`, `head` and `fvar` tables of TrueType/OpenType and WOFF
-files) so uploading is all most people need to do. WOFF2 tables are Brotli
-compressed, which Python cannot read without an extra package, so for WOFF2
-they are guessed from the file name (`Inter-SemiBoldItalic.woff2`); the
-editor lets anyone correct them.
+NetBox draws text in four styles: regular (400), medium (500: labels,
+buttons, menus, table headers), bold (600: headings, strong text) and,
+rarely, italic. So body text has a slot for each; headings and code have
+one. A slot left empty is drawn from the nearest one by the browser, so
+Regular alone is enough; a variable font (one file with every weight) in
+Regular covers all of them.
 
-Typography (Theme.typography) picks a family for each role (body text,
-headings, monospace) and the finer settings a designer would want. Each
-setting becomes a `--nbt-*` CSS variable; inc/theme.css falls back to
-NetBox's own value for every variable that is not set.
+Files (models.FontFile) are stored in the database like logos and served by
+views.FontView. Every role's files share one CSS family name (`nbt-<role>`),
+so what a file calls its family does not matter; `read()` still reads the
+family, weight and style (TrueType/OpenType/WOFF tables, or the file name for
+WOFF2, whose tables need Brotli) to show users what they uploaded.
+
+Typography (Theme.typography) picks the source for each role and the finer
+settings. Each setting becomes a `--nbt-*` CSS variable; inc/theme.css falls
+back to NetBox's own value for every variable that is not set.
 """
 import re
 import struct
@@ -21,45 +26,76 @@ import zlib
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
 
-from .css import css_string
 from .settings import get_setting
 
-# Format: (sniffed magic, MIME type, CSS format()).
+# Format: (MIME type, CSS format()).
 FORMATS = {
     'woff2': ('font/woff2', 'woff2'),
     'woff': ('font/woff', 'woff'),
     'ttf': ('font/ttf', 'truetype'),
     'otf': ('font/otf', 'opentype'),
 }
-MAX_FILES = 40
 WEIGHTS = (100, 200, 300, 400, 500, 600, 700, 800, 900)
-STYLES = ('normal', 'italic')
 
-# Families everyone has, offered next to uploaded ones: (key, label, CSS stack).
-SYSTEM_FAMILIES = (
-    ('system', _('System sans-serif'),
-     'system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif'),
-    ('serif', _('System serif'), 'Georgia, Cambria, "Times New Roman", serif'),
-    ('system-mono', _('System monospace'),
-     'ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace'),
-)
-_GENERIC = {'body': 'sans-serif', 'headings': 'sans-serif', 'mono': 'monospace'}
 ROLES = (
     ('body', _('Body text')),
     ('headings', _('Headings')),
-    ('mono', _('Monospace (code, configs)')),
+    ('mono', _('Code and configs')),
 )
+# role -> ((slot, label, CSS font-weight range, font-style), ...). Ranges make
+# one file serve neighbouring weights (Regular also draws light text).
+SLOTS = {
+    'body': (
+        ('regular', _('Regular'), '100 449', 'normal'),
+        ('medium', _('Medium'), '450 549', 'normal'),
+        ('bold', _('Bold'), '550 900', 'normal'),
+        ('italic', _('Italic'), '100 900', 'italic'),
+    ),
+    'headings': (
+        ('bold', _('Heading font'), '100 900', 'normal'),
+    ),
+    'mono': (
+        ('regular', _('Regular'), '100 900', 'normal'),
+    ),
+}
+ALL_SLOTS = {(role, slot) for role, slots in SLOTS.items() for slot, *_rest in slots}
 
-# Typography settings: key -> (default, kind, min, max). A default of '' means
-# "NetBox's own" (nothing is set). Sizes in px, spacing in em.
+# Where a role's text comes from: '' is NetBox's (Inter / Roboto Mono; for
+# headings the body font), 'uploaded' the role's own files, or a system font.
+SOURCES = {
+    'body': (
+        ('', _("NetBox's (Inter)")),
+        ('uploaded', _('Uploaded font')),
+        ('system', _('System sans-serif')),
+        ('serif', _('System serif')),
+    ),
+    'headings': (
+        ('', _('Same as body text')),
+        ('uploaded', _('Uploaded font')),
+        ('system', _('System sans-serif')),
+        ('serif', _('System serif')),
+    ),
+    'mono': (
+        ('', _("NetBox's (Roboto Mono)")),
+        ('uploaded', _('Uploaded font')),
+        ('system-mono', _('System monospace')),
+    ),
+}
+_SYSTEM_STACKS = {
+    'system': 'system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+    'serif': 'Georgia, Cambria, "Times New Roman", serif',
+    'system-mono': 'ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace',
+}
+_GENERIC = {'body': 'sans-serif', 'headings': 'sans-serif', 'mono': 'monospace'}
+
+# Typography settings: key -> (default, kind, allowed / min, max). Sizes in
+# px, spacing in em.
 SETTINGS = {
-    'body_family': ('', 'family', None, None),
-    'headings_family': ('', 'family', None, None),
-    'mono_family': ('', 'family', None, None),
+    'body_family': ('', 'source', 'body', None),
+    'headings_family': ('', 'source', 'headings', None),
+    'mono_family': ('', 'source', 'mono', None),
     'base_size': (14, 'number', 11, 20),
     'line_height': (1.43, 'number', 1.0, 2.2),
-    'body_weight': (400, 'weight', None, None),
-    'bold_weight': (600, 'weight', None, None),
     'headings_weight': (600, 'weight', None, None),
     'letter_spacing': (0.0, 'number', -0.05, 0.2),
     'headings_letter_spacing': (0.0, 'number', -0.05, 0.3),
@@ -159,7 +195,8 @@ def _from_filename(filename):
 
 def read(data, filename=''):
     """
-    {format, family, weight, style, variable} of an uploaded font file.
+    {format, family, weight, style, variable} of an uploaded font file (for
+    showing users what they uploaded; slots decide how it is used).
     Raises ValidationError for anything that is not a font we accept.
     """
     limit = get_setting('max_font_kb')
@@ -188,36 +225,30 @@ def clean_family(name):
 
 # --- Typography settings ------------------------------------------------------
 
-def family_choices(families):
-    """[(value, label, CSS stack)] for a family select; '' (NetBox's) comes first in the template."""
-    choices = [(key, label, stack) for key, label, stack in SYSTEM_FAMILIES]
-    choices += [(f'font:{family}', family, None) for family in families]
-    return choices
+def family_name(role):
+    """The CSS family name a role's uploaded files are declared under."""
+    return f'nbt-{role}'
 
 
-def stack(value, role):
-    """The CSS font-family list for a family setting, or '' for NetBox's."""
-    if not value:
-        return ''
-    for key, _label, system_stack in SYSTEM_FAMILIES:
-        if value == key:
-            return system_stack
-    if value.startswith('font:'):
-        return f'{css_string(value[5:])}, {_GENERIC[role]}'
+def stack(source, role, uploaded_roles):
+    """The CSS font-family list for a role's source, or '' for NetBox's."""
+    if source in _SYSTEM_STACKS:
+        return _SYSTEM_STACKS[source]
+    if source == 'uploaded' and role in uploaded_roles:
+        return f'"{family_name(role)}", {_GENERIC[role]}'
     return ''
 
 
-def clean_typography(values, families):
+def clean_typography(values):
     """Validated typography settings; missing ones get their default. Raises ValidationError."""
     if not isinstance(values, dict):
         raise ValidationError(_('Typography must be an object.'))
-    allowed_families = {''} | {key for key, _label, _stack in SYSTEM_FAMILIES} | {f'font:{f}' for f in families}
     cleaned = {}
     for key, (default, kind, low, high) in SETTINGS.items():
         value = values.get(key, default)
-        if kind == 'family':
-            if value not in allowed_families:
-                raise ValidationError(_('Unknown font family: {value}').format(value=value))
+        if kind == 'source':
+            if value not in {source for source, _label in SOURCES[low]}:
+                raise ValidationError(_('Unknown font choice: {value}').format(value=value))
         elif kind == 'number':
             try:
                 value = round(float(value), 3)
@@ -247,22 +278,21 @@ def with_defaults(typography):
     return {key: saved.get(key, default) for key, (default, *_rest) in SETTINGS.items()}
 
 
-def css_variables(typography):
+def css_variables(typography, uploaded_roles):
     """`--nbt-*` font variables for settings that differ from NetBox's."""
     t = with_defaults(typography)
     defaults = {key: default for key, (default, *_rest) in SETTINGS.items()}
     out = {}
-    for role in ('body', 'headings', 'mono'):
-        family = stack(t[f'{role}_family'], role)
+    for role, _label in ROLES:
+        family = stack(t[f'{role}_family'], role, uploaded_roles)
         if family:
             out[f'--nbt-font-{role}'] = family
     if t['base_size'] != defaults['base_size']:
         out['--nbt-font-size'] = f"{t['base_size'] / 16:.4f}rem"
     if t['line_height'] != defaults['line_height']:
         out['--nbt-line-height'] = f"{t['line_height']}"
-    for key in ('body_weight', 'bold_weight', 'headings_weight'):
-        if t[key] != defaults[key]:
-            out[f"--nbt-{key.replace('_', '-')}"] = str(t[key])
+    if t['headings_weight'] != defaults['headings_weight']:
+        out['--nbt-headings-weight'] = str(t['headings_weight'])
     if t['letter_spacing']:
         out['--nbt-letter-spacing'] = f"{t['letter_spacing']}em"
     if t['headings_letter_spacing']:
@@ -274,14 +304,19 @@ def css_variables(typography):
     return out
 
 
-def font_faces(fonts, url_for):
+def font_faces(files, url_for):
     """@font-face rules for FontFile rows (data not needed)."""
+    slots = {(role, slot): (weights, style) for role, entries in SLOTS.items() for slot, _l, weights, style in entries}
     rules = []
-    for font in fonts:
-        weight = '100 900' if font.variable else str(font.weight)
+    for font in files:
+        if (font.role, font.slot) not in slots:
+            continue
+        weights, style = slots[(font.role, font.slot)]
+        if font.variable and style == 'normal':
+            weights = '100 900'
         rules.append(
-            f'@font-face {{ font-family: {css_string(font.family)}; '
+            f'@font-face {{ font-family: "{family_name(font.role)}"; '
             f'src: url("{url_for(font)}") format("{FORMATS[font.format][1]}"); '
-            f'font-weight: {weight}; font-style: {font.style}; font-display: swap; }}'
+            f'font-weight: {weights}; font-style: {style}; font-display: swap; }}'
         )
     return ' '.join(rules)

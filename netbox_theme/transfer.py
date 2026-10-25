@@ -8,8 +8,8 @@ Theme files: export the saved theme as JSON and import one back.
      "logo_height": 32, "logo_margin_top": 12, "logo_margin_bottom": 12,
      "custom_colors": [{"slug", "name", "light", "dark"}, ...],
      "status_colors": {"active": "green" | "nbt-<slug>", ...},
-     "typography": {setting: value}, "fonts": [{"family", "weight", "style",
-     "variable", "filename", "data": base64}, ...]}
+     "typography": {setting: value},
+     "fonts": [{"role", "slot", "filename", "data": base64}, ...]}
 
 Imports are checked like the editor's input: colors must be #rrggbb (unknown
 tokens are ignored, missing ones get NetBox's color) and logos are re-checked
@@ -47,8 +47,8 @@ def dump(theme):
         'status_colors': statuses.stored(theme),
         'typography': fonts.with_defaults(theme.typography),
         'fonts': [
-            {'family': font.family, 'weight': font.weight, 'style': font.style, 'variable': font.variable,
-             'filename': font.filename, 'data': base64.b64encode(bytes(font.data)).decode()}
+            {'role': font.role, 'slot': font.slot, 'filename': font.filename,
+             'data': base64.b64encode(bytes(font.data)).decode()}
             for font in FontFile.objects.all()
         ],
     }
@@ -92,31 +92,25 @@ def load(raw):
 
 def _fonts(data):
     """
-    {'fonts': [...], 'typography': {...}}. Without a `fonts` list the file
-    keeps the saved font files; typography may only use families it has.
+    {'fonts': {(role, slot): (info, bytes, filename)}, 'typography': {...}}.
+    Without a `fonts` list the file keeps the saved font files.
     """
     result = {}
-    families = set(FontFile.families())
     if isinstance(data.get('fonts'), list):
-        result['fonts'], families = [], set()
-        for entry in data['fonts'][:fonts.MAX_FILES]:
+        result['fonts'] = {}
+        for entry in data['fonts']:
             if not isinstance(entry, dict) or not isinstance(entry.get('data'), str):
                 raise ValidationError(_('Font entries need their file data.'))
+            key = (entry.get('role'), entry.get('slot'))
+            if key not in fonts.ALL_SLOTS:
+                raise ValidationError(_('Unknown font slot: {role} {slot}').format(role=key[0], slot=key[1]))
             try:
                 raw = base64.b64decode(entry['data'])
             except (binascii.Error, ValueError):
                 raise ValidationError(_('A font file is not valid base64.'))
-            info = fonts.read(raw, str(entry.get('filename') or ''))
-            if entry.get('family'):
-                info['family'] = fonts.clean_family(entry['family'])
-            if entry.get('weight') in fonts.WEIGHTS:
-                info['weight'] = entry['weight']
-            if entry.get('style') in fonts.STYLES:
-                info['style'] = entry['style']
-            info['variable'] = bool(entry.get('variable', info['variable']))
-            result['fonts'].append((info, raw, str(entry.get('filename') or '')[:200]))
-            families.add(info['family'])
-    result['typography'] = fonts.clean_typography(data.get('typography') or {}, families)
+            filename = str(entry.get('filename') or '')[:200]
+            result['fonts'][key] = (fonts.read(raw, filename), raw, filename)
+    result['typography'] = fonts.clean_typography(data.get('typography') or {})
     return result
 
 

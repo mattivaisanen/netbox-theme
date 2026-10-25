@@ -29,16 +29,20 @@ a live preview; nothing needs a restart.
   one for light mode and optionally another for dark mode, and set its height
   and the space above and below it (even by default). The login page has its
   own logo upload; without one it keeps NetBox's.
-- **Fonts.** Upload WOFF2, WOFF, TTF or OTF files (all of a family at once);
-  family, weight and style are read from each file. Choose a font for body
-  text, headings and monospace (code, configs), or a system font, then the
-  text size and line height. *Advanced* has weights, letter spacing, heading
-  case and tabular numbers (digits that line up in columns).
+- **Fonts.** For body text, headings and code, choose NetBox's font, a
+  system font or upload your own (WOFF2, WOFF, TTF or OTF). Body text has
+  slots for the styles NetBox uses: Regular (enough on its own), Medium,
+  Bold and Italic; headings and code take one file. An uploaded font is used
+  as soon as you save, and an *In use* line says what each part shows.
+  *Advanced* has text size, line height, heading weight, letter spacing,
+  heading case and tabular numbers (digits that line up in columns).
 - **Edition label.** Keep, hide or replace the "Community" text under the
   logo (sidebar and login page).
+- **Reset** in each section puts just that section back to NetBox's
+  defaults (saved with *Save*).
 - **Restore NetBox defaults** deletes the saved theme; NetBox then looks
   exactly as shipped.
-- **Export / Import** the theme (colors and logos) as one JSON file, to back
+- **Export / Load theme file**: the theme (colors and logos) as one JSON file, to back
   it up or copy it to another NetBox.
 
 ## What it does not do

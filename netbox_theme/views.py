@@ -39,6 +39,8 @@ class ThemeView(ThemeAdminMixin, View):
             form.apply(theme or Theme()).save()
             form.save_fonts()
         messages.success(request, _('Theme saved.'))
+        for role in form.fonts_put_in_use:
+            messages.info(request, _('{role}: now drawn in the uploaded font.').format(role=role))
         return redirect(HOME)
 
     def render(self, request, form, theme):
@@ -70,41 +72,25 @@ class ThemeView(ThemeAdminMixin, View):
             'logo_size_css': self.logo_size_css(form),
             'custom_color_css': mark_safe(custom_colors.css(self.valid_custom_colors(form))),
             # Fonts: saved files, the settings as edited, and what each family select offers.
-            'font_files': FontFile.listed(),
             'font_weights': fonts.WEIGHTS,
-            'font_styles': fonts.STYLES,
             'font_roles': self.font_roles(form),
-            'weight_settings': self.weight_settings(form),
             'typography': fonts.with_defaults(form.typography_values()),
             **ThemeHead.font_context(self.typography_values(form)),
         })
 
     @staticmethod
-    def weight_settings(form):
-        """[(key, label, value, CSS variable, NetBox's CSS value, default)] for the weight selects."""
-        values = fonts.with_defaults(form.typography_values())
-        rows = (
-            ('body_weight', _('Body weight'), '400'),
-            ('bold_weight', _('Bold weight'), '600'),
-            ('headings_weight', _('Heading weight'), 'var(--tblr-font-weight-bold)'),
-        )
-        def weight(key):
-            try:
-                return int(values[key])
-            except (TypeError, ValueError):
-                return fonts.SETTINGS[key][0]
-
-        return [(key, label, weight(key), f"--nbt-{key.replace('_', '-')}", netbox, fonts.SETTINGS[key][0])
-                for key, label, netbox in rows]
-
-    @staticmethod
     def font_roles(form):
-        """[(role, label, chosen, [(value, label, CSS stack)])] for the family selects."""
+        """
+        [(role, label, chosen source, [(source, label, CSS stack)], [(slot, label, file or None)])]
+        for the Fonts card.
+        """
         chosen = fonts.with_defaults(form.typography_values())
-        families = FontFile.families()
+        files = {(font.role, font.slot): font for font in FontFile.listed()}
+        uploaded = FontFile.uploaded_roles() | {'body', 'headings', 'mono'}  # Preview the choice before files exist.
         return [
             (role, label, chosen[f'{role}_family'],
-             [(value, choice_label, fonts.stack(value, role)) for value, choice_label, _stack in fonts.family_choices(families)])
+             [(source, source_label, fonts.stack(source, role, uploaded)) for source, source_label in fonts.SOURCES[role]],
+             [(slot, slot_label, files.get((role, slot))) for slot, slot_label, _weights, _style in fonts.SLOTS[role]])
             for role, label in fonts.ROLES
         ]
 
@@ -112,7 +98,7 @@ class ThemeView(ThemeAdminMixin, View):
     def typography_values(form):
         """The settings as edited, or the defaults where they do not validate (yet)."""
         try:
-            return fonts.clean_typography(form.typography_values(), FontFile.families())
+            return fonts.clean_typography(form.typography_values())
         except ValidationError:
             return fonts.with_defaults({})
 
@@ -176,8 +162,8 @@ class ThemeImportView(ThemeAdminMixin, View):
             theme.save()
             if font_files is not None:
                 FontFile.clear()
-                for info, raw, filename in font_files:
-                    FontFile(data=raw, filename=filename, **info).save()
+                for (role, slot), (info, raw, filename) in font_files.items():
+                    FontFile.put(role, slot, info, raw, filename)
         messages.success(request, _('Theme "{name}" imported.').format(name=theme.name))
         return redirect(HOME)
 

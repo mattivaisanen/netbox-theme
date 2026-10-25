@@ -18,9 +18,14 @@
     <a href="{% url 'plugins:netbox_theme:theme_export' %}" class="btn btn-outline-secondary">
       <i class="mdi mdi-download" aria-hidden="true"></i> {% trans "Export" %}
     </a>
-    <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#theme-import">
-      <i class="mdi mdi-upload" aria-hidden="true"></i> {% trans "Import" %}
-    </button>
+    <form method="post" action="{% url 'plugins:netbox_theme:theme_import' %}" enctype="multipart/form-data"
+          class="d-inline" id="theme-import">
+      {% csrf_token %}
+      <input type="file" name="{{ import_form.file.html_name }}" accept=".json,application/json" hidden>
+      <button type="button" class="btn btn-outline-secondary" title="{% trans "Load a theme file, e.g. one from Export" %}">
+        <i class="mdi mdi-upload" aria-hidden="true"></i> {% trans "Load theme file" %}
+      </button>
+    </form>
     {% trans "Restore NetBox's default colors and logo? The saved theme is deleted; export it first to keep it." as confirm_text %}
     <form method="post" action="{% url 'plugins:netbox_theme:theme_reset' %}" class="d-inline"
           onsubmit="return confirm('{{ confirm_text|escapejs }}');">
@@ -83,9 +88,13 @@
     {% for mode, groups in columns %}
       <div class="col-xl-6">
         <div class="card">
-          <h2 class="card-header">
-            {% if mode == 'light' %}{% trans "Light mode" %}{% else %}{% trans "Dark mode" %}{% endif %}
-          </h2>
+          <div class="card-header d-flex align-items-center">
+            <h2 class="card-title mb-0 flex-fill">{% if mode == 'light' %}{% trans "Light mode" %}{% else %}{% trans "Dark mode" %}{% endif %}</h2>
+            <button type="button" class="btn btn-sm btn-ghost-secondary" data-reset="{{ mode }}"
+                    title="{% trans "Back to NetBox's defaults for this section (saved when you click Save)" %}">
+              <i class="mdi mdi-restore" aria-hidden="true"></i> {% trans "Reset" %}
+            </button>
+          </div>
           <div class="card-body">
             {% for group, label, fields in groups %}
               <h3 class="h4 {% if not forloop.first %}pt-2 border-top{% endif %}">{{ label }}</h3>
@@ -113,7 +122,13 @@
   <div class="row">
     <div class="col-xl-6">
       <div class="card">
-        <h2 class="card-header">{% trans "Logo and label" %}</h2>
+        <div class="card-header d-flex align-items-center">
+            <h2 class="card-title mb-0 flex-fill">{% trans "Logo and label" %}</h2>
+            <button type="button" class="btn btn-sm btn-ghost-secondary" data-reset="logo"
+                    title="{% trans "Back to NetBox's defaults for this section (saved when you click Save)" %}">
+              <i class="mdi mdi-restore" aria-hidden="true"></i> {% trans "Reset" %}
+            </button>
+          </div>
         <div class="card-body">
           <h3 class="h4">{% trans "Sidebar" %}</h3>
           {% for slot, upload, clear, url in logos %}{% if 'login' not in slot %}
@@ -193,7 +208,13 @@
   </div>
 
   <div class="card">
-    <h2 class="card-header">{% trans "Custom colors" %}</h2>
+    <div class="card-header d-flex align-items-center">
+            <h2 class="card-title mb-0 flex-fill">{% trans "Custom colors" %}</h2>
+            <button type="button" class="btn btn-sm btn-ghost-secondary" data-reset="custom-colors"
+                    title="{% trans "Back to NetBox's defaults for this section (saved when you click Save)" %}">
+              <i class="mdi mdi-restore" aria-hidden="true"></i> {% trans "Reset" %}
+            </button>
+          </div>
     <div class="card-body">
       <p class="form-text mt-0">
         {% trans "Your own named colors, each with a light and a dark mode value. Dashboard widgets list them under Theme in their Color, next to NetBox's own; status colors below can use them too (after saving). Text on them turns dark or white to stay readable." %}
@@ -215,7 +236,13 @@
   {% include 'netbox_theme/inc/fonts.html' %}
 
   <div class="card">
-    <h2 class="card-header">{% trans "Status colors" %}</h2>
+    <div class="card-header d-flex align-items-center">
+            <h2 class="card-title mb-0 flex-fill">{% trans "Status colors" %}</h2>
+            <button type="button" class="btn btn-sm btn-ghost-secondary" data-reset="status-colors"
+                    title="{% trans "Back to NetBox's defaults for this section (saved when you click Save)" %}">
+              <i class="mdi mdi-restore" aria-hidden="true"></i> {% trans "Reset" %}
+            </button>
+          </div>
     <div class="card-body">
       <p class="form-text mt-0">
         {% trans "The badge color of each status on every object type (devices, prefixes, VLANs, plugins...). NetBox's keeps NetBox's own, which can differ by type." %}
@@ -252,26 +279,6 @@
     </button>
   </div>
 </form>
-
-<div class="modal fade" id="theme-import" tabindex="-1" aria-labelledby="theme-import-title" aria-hidden="true">
-  <div class="modal-dialog">
-    <form method="post" action="{% url 'plugins:netbox_theme:theme_import' %}" enctype="multipart/form-data" class="modal-content">
-      {% csrf_token %}
-      <div class="modal-header">
-        <h5 class="modal-title" id="theme-import-title">{% trans "Import theme" %}</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{% trans "Close" %}"></button>
-      </div>
-      <div class="modal-body">
-        <input type="file" name="{{ import_form.file.html_name }}" class="form-control" accept=".json,application/json" required>
-        <div class="form-text">{% trans "A file from Export. It replaces the saved theme; logos the file has none for stay as they are." %}</div>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">{% trans "Cancel" %}</button>
-        <button type="submit" class="btn btn-primary">{% trans "Import" %}</button>
-      </div>
-    </form>
-  </div>
-</div>
 
 {{ preset_colors|json_script:"theme-presets" }}
 <script>
@@ -445,6 +452,67 @@
         root.style.setProperty(control.dataset.fontVar, value);
       }
       control.addEventListener(control.type === 'checkbox' || control.tagName === 'SELECT' ? 'change' : 'input', update);
+    });
+
+    // Fonts: the "In use" line says which font each role uses.
+    function showFontsInUse() {
+      document.querySelectorAll('select[data-font-role]').forEach(function (select) {
+        var target = document.querySelector('[data-font-status="' + select.dataset.fontRole + '"]');
+        if (target) { target.textContent = select.options[select.selectedIndex].text.trim(); }
+      });
+    }
+    document.querySelectorAll('select[data-font-role]').forEach(function (select) {
+      select.addEventListener('change', showFontsInUse);
+    });
+    showFontsInUse();
+
+    // Load theme file: pick a file, confirm, done.
+    var importForm = document.getElementById('theme-import');
+    var importFile = importForm.querySelector('input[type=file]');
+    importForm.querySelector('button').addEventListener('click', function () { importFile.click(); });
+    importFile.addEventListener('change', function () {
+      if (!importFile.files[0]) { return; }
+      var question = '{% trans "Load the theme in {name}? It replaces the saved colors, fonts and settings. Your logos stay unless the file has its own." as load_text %}{{ load_text|escapejs }}';
+      if (confirm(question.replace('{name}', importFile.files[0].name))) { importForm.submit(); } else { importFile.value = ''; }
+    });
+
+    // Reset buttons: one section back to NetBox's defaults, on the page only until Save.
+    function setValue(control, value) {
+      if (control.type === 'checkbox') { control.checked = value; } else { control.value = value; }
+      control.dispatchEvent(new Event(control.tagName === 'SELECT' || control.type === 'checkbox' ? 'change' : 'input'));
+    }
+    var resets = {
+      colors: function (mode) {
+        inputs.forEach(function (input) {
+          if (input.dataset.themeMode !== mode) { return; }
+          setValue(input, presets.netbox[mode][input.dataset.themeToken]);
+          hexBox(input).value = input.value;
+        });
+      },
+      logo: function () {
+        document.querySelectorAll('input[name^=clear_logo_]').forEach(function (box) { box.checked = true; });
+        document.querySelectorAll('input[data-logo-mode]').forEach(function (input) { setValue(input, ''); });
+        [['logo_height', 32], ['logo_margin_top', 12], ['logo_margin_bottom', 12]].forEach(function (pair) {
+          setValue(document.querySelector('input[name=' + pair[0] + ']'), pair[1]);
+        });
+        setValue(edition, 'netbox');
+      },
+      'custom-colors': function () { rows.querySelectorAll('.custom-color').forEach(function (row) { row.remove(); }); },
+      'status-colors': function () {
+        document.querySelectorAll('.status-color select').forEach(function (select) { setValue(select, ''); });
+      },
+      fonts: function () {
+        document.querySelectorAll('[data-font-var]').forEach(function (control) {
+          if (control.type === 'checkbox') { setValue(control, false); return; }
+          setValue(control, control.dataset.default !== undefined ? control.dataset.default : '');
+        });
+      },
+    };
+    document.querySelectorAll('[data-reset]').forEach(function (button) {
+      button.addEventListener('click', function () {
+        var section = button.dataset.reset;
+        if (section === 'light' || section === 'dark') { resets.colors(section); } else { resets[section](); }
+      });
     });
 
     apply();

@@ -56,7 +56,7 @@ class ThemeHead(PluginTemplateExtension):
     @classmethod
     def font_context(cls, typography):
         """@font-face rules and `--nbt-*` font variables for inc/head.html."""
-        variables = fonts.css_variables(typography or {})
+        variables = fonts.css_variables(typography or {}, FontFile.uploaded_roles())
         return {
             'font_faces': mark_safe(fonts.font_faces(FontFile.listed(), cls.font_url)),
             'font_variables': mark_safe(' '.join(f'{name}: {value};' for name, value in variables.items())),

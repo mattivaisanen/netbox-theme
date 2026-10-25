@@ -14,7 +14,7 @@ PLUGINS_CONFIG = {
 | Key | Type | Default | Description |
 | --- | --- | --- | --- |
 | `max_logo_kb` | int | `512` | Largest logo file accepted, in kilobytes (uploads and imports). |
-| `max_font_kb` | int | `2048` | Largest font file accepted, in kilobytes (uploads and imports). At most 40 font files. |
+| `max_font_kb` | int | `2048` | Largest font file accepted, in kilobytes (uploads and imports). |
 
 Everything else is set under **Plugins → Theme**.
 
@@ -64,8 +64,10 @@ get NetBox's color. Logos are checked like
 uploads. `edition` is `netbox`, `hidden` or `custom`. Widget colors keep
 their `slug` (dashboard widgets store `nbt-<slug>`); a missing slug is made
 from the name. `status_colors` maps a status value to one of NetBox's color
-names or `nbt-<slug>`; statuses this NetBox does not have are skipped. Font families in
-`typography` are `""` (NetBox's), `system`, `serif`, `system-mono` or
-`font:<family>` of an uploaded font. A file without a `fonts` list keeps the
+names or `nbt-<slug>`; statuses this NetBox does not have are skipped. Font sources in
+`typography` are `""` (NetBox's; for headings the body font), `uploaded`,
+`system`, `serif` (body, headings) or `system-mono` (code). Font slots:
+`body` `regular` / `medium` / `bold` / `italic`, `headings` `bold`, `mono`
+`regular`. A file without a `fonts` list keeps the
 saved font files; with one, it replaces them. The
 color names are listed in `netbox_theme/colors.py` (`GROUPS`).
