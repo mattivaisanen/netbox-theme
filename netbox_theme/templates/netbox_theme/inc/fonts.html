@@ -28,35 +28,35 @@
               <option value="{{ source }}" data-stack="{{ stack }}"{% if source == chosen %} selected{% endif %}>{{ source_label }}</option>
             {% endfor %}
           </select>
-          {% for slot, slot_label, file in slots %}
-            <div class="mb-2">
-              {% if slots|length > 1 %}<div class="small fw-medium">{{ slot_label }}</div>{% endif %}
-              {% if file %}
-                <div class="small d-flex flex-wrap align-items-center gap-2 mb-1">
-                  <i class="mdi mdi-check-circle text-success" aria-hidden="true"></i>
-                  <span>{{ file.detected }}</span>
-                  <span class="text-muted text-break">{{ file.filename }}</span>
-                  <label class="form-check form-check-inline mb-0 ms-auto">
-                    <input type="checkbox" name="font_{{ role }}_{{ slot }}_remove" class="form-check-input">
-                    <span class="form-check-label">{% trans "Remove" %}</span>
+          <div class="border rounded mb-2">
+            {% for slot, slot_label, file, weight, style in slots %}
+              <div class="d-flex align-items-center gap-2 px-2 py-1 font-slot{% if not forloop.last %} border-bottom{% endif %}">
+                <span class="text-muted small flex-shrink-0" style="width: 4.5rem">{{ slot_label }}</span>
+                <span class="flex-fill text-truncate font-slot-name" title="{{ file.filename|default:'' }}"
+                      {% if file %}style="font-family: 'nbt-{{ role }}'; font-weight: {{ weight }}; font-style: {{ style }}"{% endif %}>
+                  {% if file %}{{ file.detected }}{% elif forloop.first %}<span class="text-muted small">{% trans "Not set" %}</span>{% else %}<span class="text-muted small">{% trans "From Regular" %}</span>{% endif %}
+                </span>
+                <label class="btn btn-sm btn-outline-secondary mb-0 flex-shrink-0">
+                  <input type="file" name="font_{{ role }}_{{ slot }}" accept=".woff2,.woff,.ttf,.otf" hidden
+                         aria-label="{{ label }}: {{ slot_label }}">
+                  {% if file %}{% trans "Replace" %}{% else %}{% trans "Upload" %}{% endif %}
+                </label>
+                {% if file %}
+                  <label class="btn btn-sm btn-ghost-danger mb-0 px-1 flex-shrink-0" title="{% trans "Remove" %}">
+                    <input type="checkbox" name="font_{{ role }}_{{ slot }}_remove" hidden aria-label="{% trans "Remove" %}">
+                    <i class="mdi mdi-close" aria-hidden="true"></i>
                   </label>
-                </div>
-              {% endif %}
-              <input type="file" name="font_{{ role }}_{{ slot }}" class="form-control form-control-sm"
-                     accept=".woff2,.woff,.ttf,.otf" aria-label="{{ label }}: {{ slot_label }}">
-            </div>
-          {% endfor %}
+                {% endif %}
+              </div>
+            {% endfor %}
+          </div>
           <div class="form-text">
             {% if role == 'body' %}
-              {% blocktrans trimmed %}
-                Regular is enough. NetBox also uses Medium for labels, buttons and menus, Bold for headings and bold
-                text, and Italic rarely; empty ones are drawn from the nearest file. A variable font in Regular covers
-                every weight.
-              {% endblocktrans %}
+              {% trans "Regular is enough. Medium is for labels and buttons, Bold for headings and bold text; empty ones use the nearest file." %}
             {% elif role == 'headings' %}
-              {% trans "One file, for example the Bold or SemiBold of a font. Without one, headings use the body text font." %}
+              {% trans "One file, e.g. a Bold. Without one, headings use the body text font." %}
             {% else %}
-              {% trans "For code, configuration snippets and some IDs." %}
+              {% trans "Code, configuration snippets and some IDs." %}
             {% endif %}
           </div>
         </div>

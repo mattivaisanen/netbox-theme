@@ -467,6 +467,30 @@
     });
     showFontsInUse();
 
+    // Font slots: say what will happen on Save (new file, or removed).
+    document.querySelectorAll('.font-slot').forEach(function (slot) {
+      var name = slot.querySelector('.font-slot-name');
+      var original = name.innerHTML;
+      var file = slot.querySelector('input[type=file]');
+      var remove = slot.querySelector('input[type=checkbox]');
+      function show() {
+        name.style.textDecoration = remove && remove.checked ? 'line-through' : '';
+        if (file.files[0]) {
+          name.textContent = file.files[0].name + ' ({% trans "on Save" as on_save %}{{ on_save|escapejs }})';
+        } else {
+          name.innerHTML = original;
+        }
+      }
+      file.addEventListener('change', function () { if (remove) { remove.checked = false; } show(); });
+      if (remove) {
+        remove.addEventListener('change', function () {
+          file.value = '';
+          remove.closest('label').classList.toggle('active', remove.checked);
+          show();
+        });
+      }
+    });
+
     // Load theme file: pick a file, confirm, done.
     var importForm = document.getElementById('theme-import');
     var importFile = importForm.querySelector('input[type=file]');

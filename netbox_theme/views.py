@@ -14,6 +14,8 @@ from .models import FontFile, Theme
 from .template_content import ThemeHead
 
 PERMISSION = 'netbox_theme.change_theme'
+# The weight each font slot's sample is drawn in (fonts.SLOTS).
+SAMPLE_WEIGHTS = {'regular': 400, 'medium': 500, 'bold': 600, 'italic': 400}
 HOME = 'plugins:netbox_theme:theme'
 
 
@@ -81,7 +83,8 @@ class ThemeView(ThemeAdminMixin, View):
     @staticmethod
     def font_roles(form):
         """
-        [(role, label, chosen source, [(source, label, CSS stack)], [(slot, label, file or None)])]
+        [(role, label, chosen source, [(source, label, CSS stack)],
+          [(slot, label, file or None, sample weight, sample style)])]
         for the Fonts card.
         """
         chosen = fonts.with_defaults(form.typography_values())
@@ -90,7 +93,8 @@ class ThemeView(ThemeAdminMixin, View):
         return [
             (role, label, chosen[f'{role}_family'],
              [(source, source_label, fonts.stack(source, role, uploaded)) for source, source_label in fonts.SOURCES[role]],
-             [(slot, slot_label, files.get((role, slot))) for slot, slot_label, _weights, _style in fonts.SLOTS[role]])
+             [(slot, slot_label, files.get((role, slot)), SAMPLE_WEIGHTS[slot], style)
+              for slot, slot_label, _weights, style in fonts.SLOTS[role]])
             for role, label in fonts.ROLES
         ]
 
