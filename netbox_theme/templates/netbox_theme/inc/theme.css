@@ -126,3 +126,15 @@ html[data-bs-theme] .navbar-vertical.navbar-expand-lg .text-secondary { color: v
 html[data-bs-theme] .navbar-vertical.navbar-expand-lg .nav-item.dropdown.active:after { border-color: var(--nbt-sidebar-accent) !important; }
 html[data-bs-theme] .navbar-vertical.navbar-expand-lg .dropdown-item.active,
 html[data-bs-theme] .navbar-vertical.navbar-expand-lg .dropdown-item:hover { background-color: var(--tblr-navbar-active-bg) !important; }
+
+/* Rack elevations: inline SVGs whose own stylesheet (rack_elevation.css) sets
+   these on svg and svg[data-bs-theme=dark], with fixed colors in dark mode. */
+html[data-bs-theme] .rack_elevation svg {
+  --nbx-rack-bg: var(--nbt-body-bg);
+  --nbx-rack-border: color-mix(in srgb, var(--nbt-text) 70%, var(--nbt-body-bg));
+  --nbx-rack-slot-bg: color-mix(in srgb, var(--nbt-text) 8%, var(--nbt-body-bg));
+  --nbx-rack-slot-border: color-mix(in srgb, var(--nbt-text) 30%, var(--nbt-body-bg));
+  --nbx-rack-slot-hover-bg: color-mix(in srgb, var(--nbt-text) 16%, var(--nbt-body-bg));
+  --nbx-rack-link-color: var(--nbt-link);
+  --nbx-rack-unit-color: var(--nbt-muted);
+}

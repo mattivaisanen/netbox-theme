@@ -96,6 +96,7 @@ Check these on every NetBox upgrade; `colors.NETBOX` should match too.
 | Tabler `--tblr-*` color variables on `:root` / `[data-bs-theme=dark]` | Overridden by `inc/theme.css`. |
 | Colors `netbox.css` writes directly: `.page` and the active page tab (the page background, `!important`), `html` itself, `.btn-primary` text, `.text-secondary` in dark mode, `.card`, `.table thead th` (background and text), `.card-header` in `.page-body`, `.navbar`/`.page-header`, `.text-bg-primary`, `.page-link.active`, `.footer .text-primary`, `.list-group-item.active`, `.status-primary`, `.toast-primary`, tom-select's `.ts-control > div.active`, `tr[data-virtual]`, `.text-bg-<color>` text (always near-white in NetBox) | Each has a rule in `inc/theme.css`. |
 | Sidebar `.navbar-vertical.navbar-expand-lg` background gradient, `.nav-link-title`, `.nav-link-icon`, `.dropdown-item > a`, `.text-secondary` | Sidebar tokens. |
+| Rack elevation SVG variables `--nbx-rack-*` (`static/rack_elevation.css`, inlined into the SVG, which `templates/dcim/inc/rack_elevation.html` loads into `.rack_elevation` with HTMX) | Rack colors follow page background, text, link and muted. |
 | `templates/base/layout.html` logo `<img class="navbar-brand-image hide-theme-dark|light">`, `login.html` `<img class="logo hide-theme-dark|light">` | Logo swap. |
 | `.navbar-vertical.navbar-expand-lg .navbar-brand` padding, `.navbar-brand-image` height | Logo size and spacing. |
 | `.netbox-edition` (`base/layout.html`, `login.html`), sidebar `.fs-5` (.75rem) and login (.875rem) sizes | Edition label. |
