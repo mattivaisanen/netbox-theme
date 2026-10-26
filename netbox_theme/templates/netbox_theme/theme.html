@@ -147,6 +147,10 @@
           <div class="form-text mb-3">
             {% trans "SVG, PNG, JPEG, GIF or WebP. Without a logo, NetBox's own is shown." %}
           </div>
+          <h3 class="h4 pt-3 border-top">{% trans "Browser tab" %}</h3>
+          {% with upload=favicon_upload.0 clear=favicon_upload.1 url=favicon_upload.2 slot='favicon' %}
+            {% include 'netbox_theme/inc/logo_upload.html' %}
+          {% endwith %}
           <div class="row g-2 pt-3 border-top">
             <div class="col-sm-5">
               <label class="form-label" for="{{ form.edition.id_for_label }}">{{ form.edition.label }}</label>
@@ -411,8 +415,20 @@
         if (chosen.light) { css += 'html[data-bs-theme] .navbar-brand-image.hide-theme-dark { content: url("' + chosen.light + '"); }'; }
         if (chosen.dark || (chosen.light && !savedDark)) { css += 'html[data-bs-theme] .navbar-brand-image.hide-theme-light { content: url("' + (chosen.dark || chosen.light) + '"); }'; }
         logoStyle.textContent = css;
+        if (input.dataset.nbtLogoSlot === 'favicon' && chosen.favicon) { showFavicon(chosen.favicon); }
       });
     });
+    // A chosen favicon shows in the browser tab before it is saved.
+    function showFavicon(url) {
+      var link = document.querySelector('link[data-nbt-favicon]');
+      if (!link) {
+        link = document.createElement('link');
+        link.rel = 'icon';
+        link.setAttribute('data-nbt-favicon', '');
+        document.head.appendChild(link);
+      }
+      link.href = url;
+    }
 
     // Edition label: same CSS as template_content.edition_css().
     var edition = document.getElementById('{{ form.edition.id_for_label }}');
@@ -662,7 +678,7 @@
         });
       },
       logo: function () {
-        document.querySelectorAll('input[name^=clear_logo_]').forEach(function (box) { box.checked = true; });
+        document.querySelectorAll('input[name^=clear_logo_], input[name=clear_favicon]').forEach(function (box) { box.checked = true; });
         document.querySelectorAll('input[data-nbt-logo-slot]').forEach(function (input) { setValue(input, ''); });
         [['logo_height', 32], ['logo_margin_top', 12], ['logo_margin_bottom', 12]].forEach(function (pair) {
           setValue(document.querySelector('input[name=' + pair[0] + ']'), pair[1]);

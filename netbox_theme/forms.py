@@ -17,7 +17,7 @@ def field_name(mode, token):
 class ThemeForm(forms.Form):
     """
     The editor: a name, one color input per token and mode
-    (`light_primary`, `dark_primary`, ...), a logo per mode with its size,
+    (`light_primary`, `dark_primary`, ...), a logo per mode with its size, a favicon,
     the edition label, custom colors (rows of `custom_color_slug`, `_name`,
     `_light`, `_dark` inputs), status colors (`status_color_<value>`
     selects), font files (`font_<role>_<slot>` uploads and `_remove`
@@ -37,6 +37,9 @@ class ThemeForm(forms.Form):
         label=_('Login page, dark mode'), required=False,
         help_text=_('Leave empty to use the light mode logo in dark mode too.'),
     )
+    favicon = forms.FileField(
+        label=_('Favicon'), required=False, help_text=_("ICO, SVG, PNG, JPEG, GIF or WebP. Leave empty for NetBox's."),
+    )
     edition = forms.ChoiceField(label=_('Edition label'), choices=EditionChoices.choices,
                                 help_text=_('The "Community" text under the logo and on the login page.'))
     edition_text = forms.CharField(label=_('Text'), max_length=50, required=False)
@@ -47,6 +50,7 @@ class ThemeForm(forms.Form):
     clear_logo_dark = forms.BooleanField(label=_('Remove'), required=False)
     clear_logo_login_light = forms.BooleanField(label=_('Remove'), required=False)
     clear_logo_login_dark = forms.BooleanField(label=_('Remove'), required=False)
+    clear_favicon = forms.BooleanField(label=_('Remove'), required=False)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -78,6 +82,10 @@ class ThemeForm(forms.Form):
 
     def clean_logo_login_dark(self):
         return self.clean_logo('login_dark')
+
+    def clean_favicon(self):
+        upload = self.cleaned_data.get('favicon')
+        return logos.to_data_uri(upload.read(), icon=True) if upload else None
 
     def clean(self):
         data = super().clean()
@@ -181,6 +189,10 @@ class ThemeForm(forms.Form):
                 setattr(theme, f'logo_{slot}', data[f'logo_{slot}'])
             elif data[f'clear_logo_{slot}']:
                 setattr(theme, f'logo_{slot}', '')
+        if data['favicon']:
+            theme.favicon = data['favicon']
+        elif data['clear_favicon']:
+            theme.favicon = ''
         return theme
 
     @classmethod

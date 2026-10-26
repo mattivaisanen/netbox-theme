@@ -29,6 +29,7 @@ class ThemeHead(PluginTemplateExtension):
                 'light_variables': mark_safe(colors.css_variables(theme.colors('light'))),
                 'dark_variables': mark_safe(colors.css_variables(theme.colors('dark'))),
                 **self.logo_urls(theme),
+                'favicon': self.favicon_url(theme),
                 'edition_css': css.edition(theme.edition, theme.edition_text),
                 'logo_size_css': css.logo_size(theme.logo_height, theme.logo_margin_top, theme.logo_margin_bottom),
                 **self.font_context(theme.typography),
@@ -49,6 +50,12 @@ class ThemeHead(PluginTemplateExtension):
         if not theme.logo(slot):
             return ''
         return f"{reverse('plugins:netbox_theme:logo', args=[slot])}?v={theme.version}"
+
+    @staticmethod
+    def favicon_url(theme):
+        if not theme or not theme.favicon:
+            return ''
+        return f"{reverse('plugins:netbox_theme:favicon')}?v={theme.version}"
 
     @staticmethod
     def font_url(font):

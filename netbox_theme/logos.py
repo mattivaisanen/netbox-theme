@@ -19,8 +19,10 @@ SLOTS = ('light', 'dark', 'login_light', 'login_dark')
 DATA_URI = re.compile(r'^data:(?P<type>image/[a-z0-9.+-]+);base64,(?P<data>[A-Za-z0-9+/=\s]*)$')
 
 
-def sniff(data):
-    """The image type of `data`, or None if it is not a logo we accept."""
+def sniff(data, icon=False):
+    """The image type of `data`, or None if it is not a logo we accept. `icon` also accepts ICO (favicons)."""
+    if icon and data[:4] == b'\x00\x00\x01\x00':
+        return 'image/x-icon'
     if data.startswith(b'\x89PNG\r\n\x1a\n'):
         return 'image/png'
     if data.startswith(b'\xff\xd8\xff'):
@@ -35,25 +37,27 @@ def sniff(data):
     return None
 
 
-def to_data_uri(data):
-    """A logo file's bytes as a `data:` URI. Raises ValidationError."""
+def to_data_uri(data, icon=False):
+    """A logo (or with `icon`, favicon) file's bytes as a `data:` URI. Raises ValidationError."""
     limit = get_setting('max_logo_kb') * 1024
     if len(data) > limit:
         raise ValidationError(_('Logo is larger than {kb} KB.').format(kb=get_setting('max_logo_kb')))
-    content_type = sniff(data)
+    content_type = sniff(data, icon)
     if content_type is None:
+        if icon:
+            raise ValidationError(_('Favicon must be an ICO, SVG, PNG, JPEG, GIF or WebP image.'))
         raise ValidationError(_('Logo must be an SVG, PNG, JPEG, GIF or WebP image.'))
     return f'data:{content_type};base64,{base64.b64encode(data).decode()}'
 
 
-def check_data_uri(uri):
-    """An imported logo: re-checked as if it were uploaded. '' stays ''."""
+def check_data_uri(uri, icon=False):
+    """An imported logo or favicon: re-checked as if it were uploaded. '' stays ''."""
     if not uri:
         return ''
     if not isinstance(uri, str):
         raise ValidationError(_('Logo is not a base64 data: URI.'))
     _content_type, data = from_data_uri(uri)
-    return to_data_uri(data)
+    return to_data_uri(data, icon)
 
 
 def from_data_uri(uri):

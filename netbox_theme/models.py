@@ -20,7 +20,7 @@ __all__ = ('EditionChoices', 'FontFile', 'Theme')
 
 # Bump CACHE_VERSION whenever a model changes, so no process reads objects
 # another version cached.
-CACHE_VERSION = 2
+CACHE_VERSION = 3
 CACHE_KEY = f'netbox_theme:v{CACHE_VERSION}:current'
 FONTS_CACHE_KEY = f'netbox_theme:v{CACHE_VERSION}:fonts'
 
@@ -43,6 +43,8 @@ class Theme(models.Model):
     logo_dark = models.TextField(verbose_name=_('logo (dark mode)'), blank=True)
     logo_login_light = models.TextField(verbose_name=_('login page logo (light mode)'), blank=True)
     logo_login_dark = models.TextField(verbose_name=_('login page logo (dark mode)'), blank=True)
+    # The browser tab icon, a data: URI like the logos. Blank is NetBox's.
+    favicon = models.TextField(verbose_name=_('favicon'), blank=True)
     # Sidebar logo size and spacing, in pixels. NetBox's own: 32 high, 12
     # above, 0 below; even spacing reads better, so 12 / 12.
     logo_height = models.PositiveSmallIntegerField(

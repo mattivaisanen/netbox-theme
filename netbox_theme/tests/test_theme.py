@@ -310,6 +310,17 @@ class PageTests(TestCase):
         self.assertEqual(self.client.get(reverse(URL + 'logo', args=['login_dark']))['Content-Type'], 'image/png')
         self.assertEqual(self.client.get(reverse(URL + 'logo', args=['nope'])).status_code, 404)
 
+    def test_favicon(self):
+        ico = b'\x00\x00\x01\x00' + b'\x00' * 32
+        self.client.post(reverse(URL + 'theme'), self.form_data(favicon=SimpleUploadedFile('f.ico', ico)))
+        self.client.logout()
+        self.assertContains(self.client.get(reverse('login')), '<link rel="icon" href="' + reverse(URL + 'favicon'))
+        icon = self.client.get(reverse(URL + 'favicon'))
+        self.assertEqual((icon.content, icon['Content-Type']), (ico, 'image/x-icon'))
+        self.assertEqual(transfer.dump(Theme.objects.get())['favicon'], logos.to_data_uri(ico, icon=True))
+        with self.assertRaises(ValidationError):
+            logos.to_data_uri(ico)  # Logos stay images a sidebar can draw.
+
     def test_fonts(self):
         regular = SimpleUploadedFile('acme.ttf', sfnt('Acme Sans', 400))
         self.client.post(reverse(URL + 'theme'), self.form_data(font_body_regular=regular))

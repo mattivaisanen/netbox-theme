@@ -11,3 +11,4 @@ html[data-bs-theme=dark] { {{ dark_variables }} }
 <style id="nbt-theme-logo-size">{{ logo_size_css }}</style>
 <style id="nbt-theme-custom-colors">{{ custom_color_css }}</style>
 <style id="nbt-theme-fonts">{{ font_faces }}</style>
+{% if favicon %}<link rel="icon" href="{{ favicon }}" data-nbt-favicon>{% endif %}

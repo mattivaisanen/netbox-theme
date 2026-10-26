@@ -4,6 +4,7 @@ Theme files: export the saved theme as JSON and import one back.
     {"netbox_theme": 1, "name": "...", "light": {token: "#rrggbb"},
      "dark": {...}, "logo_light": "data:...", "logo_dark": "data:...",
      "logo_login_light": "data:...", "logo_login_dark": "data:...",
+     "favicon": "data:...",
      "edition": "netbox" | "hidden" | "custom", "edition_text": "...",
      "logo_height": 32, "logo_margin_top": 12, "logo_margin_bottom": 12,
      "custom_colors": [{"slug", "name", "light", "dark"}, ...],
@@ -13,7 +14,7 @@ Theme files: export the saved theme as JSON and import one back.
 
 Imports are checked like the editor's input: colors must be #rrggbb (unknown
 tokens are ignored, missing ones get NetBox's color) and logos are re-checked
-as uploads, fonts too. A logo the file leaves out or empty keeps the current
+as uploads, fonts too. A logo or favicon the file leaves out or empty keeps the current
 one; so do the font files when the file has no `fonts` list.
 """
 import base64
@@ -38,6 +39,7 @@ def dump(theme):
         'light': theme.colors('light'),
         'dark': theme.colors('dark'),
         **{f'logo_{slot}': getattr(theme, f'logo_{slot}') for slot in logos.SLOTS},
+        'favicon': theme.favicon,
         'edition': theme.edition,
         'edition_text': theme.edition_text,
         'logo_height': theme.logo_height,
@@ -83,6 +85,7 @@ def load(raw):
         # from a palette usually have none); Remove in the editor clears it.
         **{f'logo_{slot}': logos.check_data_uri(data[f'logo_{slot}'])
            for slot in logos.SLOTS if data.get(f'logo_{slot}')},
+        **({'favicon': logos.check_data_uri(data['favicon'], icon=True)} if data.get('favicon') else {}),
         **_logo_size(data),
         'custom_colors': custom,
         'status_colors': status_colors,

@@ -72,11 +72,13 @@ class ThemeView(ThemeAdminMixin, View):
                                 if value in ('active', 'planned', 'offline', 'failed')],
             'netbox_colors': statuses.NETBOX_COLORS,
             'custom_color_options': self.valid_custom_colors(form),
+            'favicon_upload': (form['favicon'], form['clear_favicon'], ThemeHead.favicon_url(theme)),
             'logo_size': [form[f] for f in ('logo_height', 'logo_margin_top', 'logo_margin_bottom')],
             # The page itself is drawn in the colors being edited.
             'light_variables': mark_safe(colors.css_variables(current['light'])),
             'dark_variables': mark_safe(colors.css_variables(current['dark'])),
             **ThemeHead.logo_urls(theme),
+            'favicon': ThemeHead.favicon_url(theme),
             'netbox_palette_text': css.netbox_palette_text(),
             'edition_css': css.edition(form['edition'].value(), form['edition_text'].value() or ''),
             'logo_size_css': self.logo_size_css(form),
@@ -185,9 +187,12 @@ class LogoView(View):
     The saved logo for a slot (logos.SLOTS). Open to everyone who can see NetBox's sidebar.
     Cached for a year: the page asks for it with `?v=<theme version>`.
     """
-    def get(self, request, slot):
+    def image(self, theme, slot):
+        return theme.logo(slot)
+
+    def get(self, request, slot=None):
         theme = Theme.current()
-        logo = theme.logo(slot) if theme else ''
+        logo = self.image(theme, slot) if theme else ''
         if not logo:
             raise Http404
         try:
@@ -200,6 +205,12 @@ class LogoView(View):
         # An SVG opened directly must not run scripts (in <img> it never does).
         response['Content-Security-Policy'] = "default-src 'none'; style-src 'unsafe-inline'; sandbox"
         return response
+
+
+class FaviconView(LogoView):
+    """The saved favicon, served like logos; open to everyone, the login page uses it too."""
+    def image(self, theme, slot):
+        return theme.favicon
 
 
 class FontView(View):

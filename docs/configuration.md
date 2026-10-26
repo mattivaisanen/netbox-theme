@@ -13,7 +13,7 @@ PLUGINS_CONFIG = {
 
 | Key | Type | Default | Description |
 | --- | --- | --- | --- |
-| `max_logo_kb` | int | `512` | Largest logo file accepted, in kilobytes (uploads and imports). |
+| `max_logo_kb` | int | `512` | Largest logo or favicon file accepted, in kilobytes (uploads and imports). |
 | `max_font_kb` | int | `2048` | Largest font file accepted, in kilobytes (uploads and imports). |
 
 Everything else is set under **Plugins → Theme**.
@@ -41,6 +41,7 @@ permission.
   "logo_dark": "",
   "logo_login_light": "",
   "logo_login_dark": "",
+  "favicon": "",
   "logo_height": 32,
   "logo_margin_top": 12,
   "logo_margin_bottom": 12,
@@ -61,8 +62,8 @@ permission.
 are ignored. Missing ones follow the color they were split from in older
 versions (top bar and table header from card background, button and change
 action colors from the status colors, and so on), else
-get NetBox's color. Logos are checked like
-uploads. `edition` is `netbox`, `hidden` or `custom`. Widget colors keep
+get NetBox's color. Logos and the favicon are checked like
+uploads; one the file leaves out or empty keeps the saved one. `edition` is `netbox`, `hidden` or `custom`. Widget colors keep
 their `slug` (dashboard widgets store `nbt-<slug>`); a missing slug is made
 from the name. `status_colors` maps a status value to one of NetBox's color
 names or `nbt-<slug>`; statuses this NetBox does not have are skipped. Font sources in

@@ -5,7 +5,7 @@ How the plugin works and why, for anyone changing it.
 ## Data
 
 `models.Theme` is one row (pk 1): a name, `light` and `dark` (token →
-`#rrggbb`) and a logo per mode stored as a `data:` URI. No row means
+`#rrggbb`), a logo per mode and a favicon, stored as `data:` URIs. No row means
 NetBox's own look; *Restore NetBox defaults* deletes it (`Theme.reset()`).
 `Theme.current()` caches the row (or its absence) in NetBox's cache until
 it is saved or deleted. It is a plain Django model, not a NetBoxModel: a
@@ -14,7 +14,10 @@ setting, with no list, REST API or change approval.
 Logos live in the database rather than `MEDIA_ROOT` so every NetBox
 container serves them without shared storage and exports carry them.
 `logos.sniff()` decides the type from the content, never the file name.
-`views.LogoView` serves them with a year-long cache (URLs carry
+The favicon (`Theme.favicon`) is stored the same way; `sniff(icon=True)`
+also accepts ICO. `inc/head.html` adds a `<link rel="icon">` after NetBox's
+own (the last one wins) and `views.FaviconView` serves it like a logo.
+`views.LogoView` serves logos with a year-long cache (URLs carry
 `?v=<save time>`) and a `sandbox` Content-Security-Policy, so an SVG opened
 directly cannot run scripts (in `<img>` it never can).
 
@@ -148,6 +151,7 @@ Check these on every NetBox upgrade; `colors.NETBOX` should match too.
 | Rack elevation SVG variables `--nbx-rack-*` (`static/rack_elevation.css`, inlined into the SVG, which `templates/dcim/inc/rack_elevation.html` loads into `.rack_elevation` with HTMX) | Rack colors follow page background, text, link and muted. |
 | Tabler `--tblr-font-sans-serif`, `--tblr-body-font-family`, `--tblr-font-monospace`, `--tblr-body-font-size`, `--tblr-body-line-height`, `--tblr-body-font-weight`, `--tblr-font-weight-bold`, `--tblr-font-weight-headings` | Fonts; fallbacks in `inc/theme.css` are NetBox 4.7's values. |
 | `templates/base/layout.html` logo `<img class="navbar-brand-image hide-theme-dark|light">`, `login.html` `<img class="logo hide-theme-dark|light">` | Logo swap. |
+| `templates/base/base.html` `<link rel="icon">` before `{% plugin_head %}` | Favicon. |
 | `.navbar-vertical.navbar-expand-lg .navbar-brand` padding, `.navbar-brand-image` height | Logo size and spacing. |
 | `.netbox-edition` (`base/layout.html`, `login.html`), sidebar `.fs-5` (.75rem) and login (.875rem) sizes | Edition label. |
 | `setmode.js` sets `data-bs-theme` on `<html>` | Mode selectors; the editor watches it to re-preview. |

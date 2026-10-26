@@ -4,6 +4,10 @@
 
 New:
 
+- Favicon: upload your own browser tab icon (ICO, SVG, PNG, JPEG, GIF or
+  WebP) under *Logo and label*. It shows on every page and the login page,
+  travels in theme files and goes back to NetBox's with *Reset* or *Restore
+  NetBox defaults*.
 - Button colors: Clone, Edit, Delete, Import (also Bookmark and Subscribe)
   and Export buttons, and custom links in the same colors, follow the theme
   instead of NetBox's fixed green, yellow, red, cyan and purple, with dark or

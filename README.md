@@ -33,6 +33,8 @@ web UI with a live preview; nothing needs a restart.
   one for light mode and optionally another for dark mode, and set its height
   and the space above and below it (even by default). The login page has its
   own logo upload; without one it keeps NetBox's.
+- **Favicon.** Upload the browser tab icon (ICO, SVG, PNG, JPEG, GIF or
+  WebP); without one NetBox's is shown.
 - **Fonts.** For body text, headings and code, choose NetBox's font, a
   system font or upload your own (WOFF2, WOFF, TTF or OTF). Body text has
   slots for the styles NetBox uses: Regular (enough on its own), Medium,
@@ -48,7 +50,7 @@ web UI with a live preview; nothing needs a restart.
   defaults (saved with *Save*).
 - **Restore NetBox defaults** deletes the saved theme; NetBox then looks
   exactly as shipped.
-- **Export / Load theme file**: the theme (colors and logos) as one JSON file, to back
+- **Export / Load theme file**: the theme (colors, logos and favicon) as one JSON file, to back
   it up or copy it to another NetBox.
 
 ## What it does not do
