@@ -180,6 +180,15 @@
             <button type="button" class="btn btn-danger">{% trans "Danger" %}</button>
             <button type="button" class="btn btn-outline-primary">{% trans "Outline" %}</button>
           </div>
+          {# NetBox's object action buttons, with their real classes (utilities/templates/buttons). #}
+          <div class="btn-list mb-3">
+            <button type="button" class="btn btn-primary"><i class="mdi mdi-plus-thick" aria-hidden="true"></i> {% trans "Add" %}</button>
+            <button type="button" class="btn btn-green"><i class="mdi mdi-content-copy" aria-hidden="true"></i> {% trans "Clone" %}</button>
+            <button type="button" class="btn btn-yellow"><i class="mdi mdi-pencil" aria-hidden="true"></i> {% trans "Edit" %}</button>
+            <button type="button" class="btn btn-red"><i class="mdi mdi-trash-can-outline" aria-hidden="true"></i> {% trans "Delete" %}</button>
+            <button type="button" class="btn btn-cyan"><i class="mdi mdi-upload" aria-hidden="true"></i> {% trans "Import" %}</button>
+            <button type="button" class="btn btn-purple"><i class="mdi mdi-download" aria-hidden="true"></i> {% trans "Export" %}</button>
+          </div>
           <div class="mb-3">
             {% for color in status_colors %}
               <span class="badge text-bg-{{ color }}">{{ color }}</span>

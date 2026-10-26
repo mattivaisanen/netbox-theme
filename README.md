@@ -13,8 +13,9 @@ web UI with a live preview; nothing needs a restart.
   Forest, Sunset, Royal, Graphite, Navy sidebar) and adjust any color: brand
   color and the text on it, links, page background, top bar, text, muted
   text, borders, card background and header, table header and its text, form
-  fields, sidebar background, text and headings, the status (success, info, warning, danger, secondary). Text on status colored
-  badges turns dark or white, whichever reads better.
+  fields, sidebar background, text and headings, the status (success, info, warning, danger, secondary) and NetBox's action
+  buttons (Clone, Edit, Delete, Import, Export). Text on status colored
+  badges and buttons turns dark or white, whichever reads better.
 - **Custom colors.** Add your own named colors (with a light and a dark mode
   value). Dashboard widgets list them under *Theme* in their *Color* choice,
   next to NetBox's Blue, Green and so on, which stay as they are. *Add

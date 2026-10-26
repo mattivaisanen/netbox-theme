@@ -1,5 +1,15 @@
 # Changelog
 
+## Unreleased
+
+New:
+
+- Button colors: Clone, Edit, Delete, Import (also Bookmark and Subscribe)
+  and Export buttons, and custom links in the same colors, follow the theme
+  instead of NetBox's fixed green, yellow, red, cyan and purple, with dark or
+  white text, whichever reads better. A theme saved earlier gives them its
+  success, warning, danger and info colors.
+
 ## 0.1.0 (2026-10-26)
 
 First release.

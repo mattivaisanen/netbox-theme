@@ -45,17 +45,30 @@ GROUPS = (
         ('warning', _('Warning')),
         ('danger', _('Danger')),
     )),
+    # NetBox's object action buttons, drawn in fixed named colors (inc/theme.css).
+    ('buttons', _('Buttons'), (
+        ('button_clone', _('Clone')),
+        ('button_edit', _('Edit')),
+        ('button_delete', _('Delete')),
+        ('button_import', _('Import and bookmark')),
+        ('button_export', _('Export')),
+    )),
 )
 TOKENS = tuple(token for _group, _label, tokens in GROUPS for token, _label in tokens)
 
 _STATUS = {
     'secondary': '#6b7280', 'success': '#2fb344', 'info': '#4299e1', 'warning': '#f59f00', 'danger': '#d63939',
 }
+# NetBox's green, yellow, red, cyan and purple, the same in both modes.
+_BUTTONS = {
+    'button_clone': '#2fb344', 'button_edit': '#f59f00', 'button_delete': '#d63939',
+    'button_import': '#17a2b8', 'button_export': '#ae3ec9',
+}
 
 # NetBox 4.7's own colors (netbox.css), so a fresh theme starts where NetBox is.
 NETBOX = {
     'light': {
-        **_STATUS,
+        **_STATUS, **_BUTTONS,
         'primary': '#00857d', 'primary_fg': '#f9fafb', 'link': '#00857d',
         'body_bg': '#f9fafb', 'header': '#ffffff', 'text': '#374151', 'muted': '#6b7280', 'border': '#e5e7eb',
         'surface': '#ffffff', 'card_header': '#f9fafb', 'table_header': '#f9fafb', 'table_header_text': '#6b7280',
@@ -63,7 +76,7 @@ NETBOX = {
         'sidebar': '#ffffff', 'sidebar_text': '#001423', 'sidebar_accent': '#00857d',
     },
     'dark': {
-        **_STATUS,
+        **_STATUS, **_BUTTONS,
         'secondary': '#9ca3af',
         'primary': '#00f2d4', 'primary_fg': '#001423', 'link': '#00f2d4',
         'body_bg': '#081b2a', 'header': '#001423', 'text': '#e5e7eb', 'muted': '#9ca3af', 'border': '#374151',
@@ -81,17 +94,24 @@ def _mix(color, other, share):
     return '#' + ''.join(f'{round(x + (y - x) * share):02x}' for x, y in zip(a, b))
 
 
+# Button colors follow the status color closest to them, so a theme saved
+# before they existed recolors its buttons too. Export (purple) has no match.
+_BUTTONS_DERIVED = {
+    'button_clone': ('success', None), 'button_edit': ('warning', None), 'button_delete': ('danger', None),
+    'button_import': ('info', None),
+}
+
 # Colors added after the first version follow the ones they used to share, so
 # older themes and imports keep their look: {mode: {token: (source, mix)}}.
 # `mix` is (other token, share) to blend in, or None to copy the source.
 _DERIVED = {
     'light': {
         'header': ('surface', None), 'input_bg': ('surface', None), 'card_header': ('body_bg', None),
-        'table_header': ('body_bg', None), 'table_header_text': ('muted', None),
+        'table_header': ('body_bg', None), 'table_header_text': ('muted', None), **_BUTTONS_DERIVED,
     },
     'dark': {
         'header': ('surface', None), 'table_header': ('surface', None), 'table_header_text': ('muted', None),
-        'card_header': ('surface', ('text', 0.08)), 'input_bg': ('body_bg', None),
+        'card_header': ('surface', ('text', 0.08)), 'input_bg': ('body_bg', None), **_BUTTONS_DERIVED,
     },
 }
 

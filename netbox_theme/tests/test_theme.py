@@ -33,6 +33,15 @@ class ColorTests(SimpleTestCase):
         self.assertEqual((dark['header'], dark['table_header'], dark['input_bg']), ('#123456', '#123456', '#000000'))
         self.assertEqual(colors.complete({}, 'light'), colors.NETBOX['light'])
 
+    def test_buttons_follow_status_colors(self):
+        # A theme saved before the button colors existed recolors its buttons too.
+        light = colors.complete({'success': '#00aa00', 'warning': '#ffee00', 'danger': '#aa0000', 'info': '#0000aa'}, 'light')
+        self.assertEqual(
+            (light['button_clone'], light['button_edit'], light['button_delete'], light['button_import']),
+            ('#00aa00', '#ffee00', '#aa0000', '#0000aa'),
+        )
+        self.assertEqual(light['button_export'], colors.NETBOX['light']['button_export'])
+
     def test_validate_rejects_bad_colors(self):
         with self.assertRaises(ValidationError):
             colors.validate({'primary': 'url(x);}'}, 'light')
@@ -210,6 +219,9 @@ class PageTests(TestCase):
         # Text on light colors is dark: status colors through -fg, NetBox's named colors directly.
         self.assertContains(page, '--tblr-warning-fg: var(--nbt-warning-on);')
         self.assertContains(page, 'html[data-bs-theme] .text-bg-yellow')
+        # Action buttons (btn-green, btn-red...) take the theme's button colors.
+        self.assertContains(page, '--nbt-button-delete: #d63939;')
+        self.assertContains(page, '--tblr-red-fg: var(--nbt-button-delete-on);')
         self.assertContains(page, reverse(URL + 'logo', args=['light']))
 
         self.assertNotContains(page, 'img.logo')  # The login page keeps NetBox's logo.

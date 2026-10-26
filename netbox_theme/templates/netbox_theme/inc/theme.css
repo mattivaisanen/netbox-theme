@@ -86,8 +86,46 @@ html[data-bs-theme] .page,
 html[data-bs-theme] .page-tabs .nav-tabs .nav-link.active { background-color: var(--nbt-body-bg) !important; }
 html[data-bs-theme] .btn-primary { color: var(--nbt-primary-fg) !important; }
 /* Icons inside colored buttons follow the button's text. */
-html[data-bs-theme] :is(.btn-primary, .btn-secondary, .btn-success, .btn-info, .btn-warning, .btn-danger) :is(.mdi, .icon) {
+html[data-bs-theme] :is(.btn-primary, .btn-secondary, .btn-success, .btn-info, .btn-warning, .btn-danger,
+                        .btn-green, .btn-yellow, .btn-red, .btn-cyan, .btn-purple) :is(.mdi, .icon) {
   color: inherit !important;
+}
+
+/* Object action buttons. NetBox draws them in fixed named colors: btn-green
+   (Clone), btn-yellow (Edit, Edit Selected), btn-red (Delete, Delete Selected),
+   btn-cyan (Import, Bookmark, Subscribe), btn-purple (Export); custom links
+   use the same classes. Tabler builds a button from --tblr-<color>, -fg and
+   -darken, so they are redefined on these buttons only: badges and other uses
+   of the named colors keep NetBox's. */
+html[data-bs-theme] :is(.btn-green, .btn-outline-green, .btn-ghost-green) {
+  --tblr-green: var(--nbt-button-clone);
+  --tblr-green-rgb: var(--nbt-button-clone-rgb);
+  --tblr-green-fg: var(--nbt-button-clone-on);
+  --tblr-green-darken: color-mix(in oklab, var(--nbt-button-clone), transparent 20%);
+}
+html[data-bs-theme] :is(.btn-yellow, .btn-outline-yellow, .btn-ghost-yellow) {
+  --tblr-yellow: var(--nbt-button-edit);
+  --tblr-yellow-rgb: var(--nbt-button-edit-rgb);
+  --tblr-yellow-fg: var(--nbt-button-edit-on);
+  --tblr-yellow-darken: color-mix(in oklab, var(--nbt-button-edit), transparent 20%);
+}
+html[data-bs-theme] :is(.btn-red, .btn-outline-red, .btn-ghost-red) {
+  --tblr-red: var(--nbt-button-delete);
+  --tblr-red-rgb: var(--nbt-button-delete-rgb);
+  --tblr-red-fg: var(--nbt-button-delete-on);
+  --tblr-red-darken: color-mix(in oklab, var(--nbt-button-delete), transparent 20%);
+}
+html[data-bs-theme] :is(.btn-cyan, .btn-outline-cyan, .btn-ghost-cyan) {
+  --tblr-cyan: var(--nbt-button-import);
+  --tblr-cyan-rgb: var(--nbt-button-import-rgb);
+  --tblr-cyan-fg: var(--nbt-button-import-on);
+  --tblr-cyan-darken: color-mix(in oklab, var(--nbt-button-import), transparent 20%);
+}
+html[data-bs-theme] :is(.btn-purple, .btn-outline-purple, .btn-ghost-purple) {
+  --tblr-purple: var(--nbt-button-export);
+  --tblr-purple-rgb: var(--nbt-button-export-rgb);
+  --tblr-purple-fg: var(--nbt-button-export-on);
+  --tblr-purple-darken: color-mix(in oklab, var(--nbt-button-export), transparent 20%);
 }
 {{ netbox_palette_text }}
 html[data-bs-theme=dark] .text-secondary { color: var(--nbt-muted) !important; }
