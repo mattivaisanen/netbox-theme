@@ -53,6 +53,12 @@ GROUPS = (
         ('button_import', _('Import and bookmark')),
         ('button_export', _('Export')),
     )),
+    # Create / Update / Delete badges in the changelog and change requests (actions.py).
+    ('actions', _('Change actions'), (
+        ('action_create', _('Create')),
+        ('action_update', _('Update')),
+        ('action_delete', _('Delete')),
+    )),
 )
 TOKENS = tuple(token for _group, _label, tokens in GROUPS for token, _label in tokens)
 
@@ -63,6 +69,8 @@ _STATUS = {
 _BUTTONS = {
     'button_clone': '#2fb344', 'button_edit': '#f59f00', 'button_delete': '#d63939',
     'button_import': '#17a2b8', 'button_export': '#ae3ec9',
+    # NetBox's green, blue and red for changelog actions.
+    'action_create': '#2fb344', 'action_update': '#066fd1', 'action_delete': '#d63939',
 }
 
 # NetBox 4.7's own colors (netbox.css), so a fresh theme starts where NetBox is.
@@ -94,11 +102,12 @@ def _mix(color, other, share):
     return '#' + ''.join(f'{round(x + (y - x) * share):02x}' for x, y in zip(a, b))
 
 
-# Button colors follow the status color closest to them, so a theme saved
-# before they existed recolors its buttons too. Export (purple) has no match.
+# Button and change action colors follow the status color closest to them, so
+# a theme saved before they existed recolors them too. Export (purple) and
+# Update (blue) have no match.
 _BUTTONS_DERIVED = {
     'button_clone': ('success', None), 'button_edit': ('warning', None), 'button_delete': ('danger', None),
-    'button_import': ('info', None),
+    'button_import': ('info', None), 'action_create': ('success', None), 'action_delete': ('danger', None),
 }
 
 # Colors added after the first version follow the ones they used to share, so

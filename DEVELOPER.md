@@ -115,12 +115,24 @@ first. The theme's map is read once per request (kept on the request).
 Every app's models (and so their choice sets) are imported before any
 `ready()` runs, so plugins' statuses are covered whatever their order.
 
+## Change action colors
+
+The changelog's Create / Update / Delete badges are `text-bg-<color>` with
+the color from `ObjectChangeActionChoices.colors` (`ObjectChange.get_action_color()`;
+netbox-change-approval reads the same map). `actions.install()` (from
+`ready()`) wraps it in `ThemedActionColors`, which returns `nbta-<action>`
+while a theme is saved (checked once per request) and NetBox's color
+otherwise. `inc/theme.css` draws `.text-bg-nbta-<action>` from the
+`action_*` tokens. The `nbta-` prefix never clashes with custom colors
+(`nbt-<slug>`).
+
 ## NetBox internals this depends on
 
 | NetBox internal | Why |
 | --- | --- |
 | `extras.dashboard.forms.DashboardWidgetForm.base_fields['color']` (a `ChoiceField`) | Widget colors. Missing field: logged, nothing added. |
 | `templates/extras/dashboard/widget.html` draws `text-bg-<color>` | Widget colors. |
+| `core.choices.ObjectChangeActionChoices.colors` read with `.get()` by `ObjectChange.get_action_color()` | Change action colors. |
 | `utilities.choices.ChoiceSet.colors` read with `.get()` / `[]` by `get_<field>_color()` | Status colors. |
 
 ## NetBox CSS this depends on

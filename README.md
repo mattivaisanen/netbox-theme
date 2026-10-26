@@ -14,7 +14,8 @@ web UI with a live preview; nothing needs a restart.
   color and the text on it, links, page background, top bar, text, muted
   text, borders, card background and header, table header and its text, form
   fields, sidebar background, text and headings, the status (success, info, warning, danger, secondary) and NetBox's action
-  buttons (Clone, Edit, Delete, Import, Export). Text on status colored
+  buttons (Clone, Edit, Delete, Import, Export) and the Create / Update /
+  Delete badges of the changelog and change requests. Text on status colored
   badges and buttons turns dark or white, whichever reads better.
 - **Custom colors.** Add your own named colors (with a light and a dark mode
   value). Dashboard widgets list them under *Theme* in their *Color* choice,

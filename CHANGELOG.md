@@ -9,6 +9,10 @@ New:
   instead of NetBox's fixed green, yellow, red, cyan and purple, with dark or
   white text, whichever reads better. A theme saved earlier gives them its
   success, warning, danger and info colors.
+- Change action colors: the Create, Update and Delete badges in the
+  changelog (and in netbox-change-approval's change requests) follow the
+  theme instead of NetBox's fixed green, blue and red. A theme saved earlier
+  gives Create and Delete its success and danger colors.
 
 ## 0.1.0 (2026-10-26)
 

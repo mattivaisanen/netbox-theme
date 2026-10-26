@@ -32,8 +32,9 @@ class ThemeConfig(PluginConfig):
 
     def ready(self):
         super().ready()
-        from . import custom_colors, statuses
+        from . import actions, custom_colors, statuses
 
+        actions.install()
         custom_colors.install()
         statuses.install()
 

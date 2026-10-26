@@ -59,8 +59,8 @@ permission.
 
 *Import* replaces the saved theme. Colors must be `#rrggbb`; unknown names
 are ignored. Missing ones follow the color they were split from in older
-versions (top bar and table header from card background, button colors
-from the status colors, and so on), else
+versions (top bar and table header from card background, button and change
+action colors from the status colors, and so on), else
 get NetBox's color. Logos are checked like
 uploads. `edition` is `netbox`, `hidden` or `custom`. Widget colors keep
 their `slug` (dashboard widgets store `nbt-<slug>`); a missing slug is made

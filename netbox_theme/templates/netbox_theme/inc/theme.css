@@ -161,6 +161,12 @@ html[data-bs-theme] .text-bg-info { color: var(--nbt-info-on) !important; }
 html[data-bs-theme] .text-bg-warning { color: var(--nbt-warning-on) !important; }
 html[data-bs-theme] .text-bg-danger { color: var(--nbt-danger-on) !important; }
 
+/* Change action badges (Create, Update, Delete): actions.py names these
+   classes while a theme is saved. */
+html[data-bs-theme] .text-bg-nbta-create { background-color: var(--nbt-action-create) !important; color: var(--nbt-action-create-on) !important; }
+html[data-bs-theme] .text-bg-nbta-update { background-color: var(--nbt-action-update) !important; color: var(--nbt-action-update-on) !important; }
+html[data-bs-theme] .text-bg-nbta-delete { background-color: var(--nbt-action-delete) !important; color: var(--nbt-action-delete-on) !important; }
+
 /* Sidebar */
 html[data-bs-theme] .navbar-vertical.navbar-expand-lg {
   background: linear-gradient(180deg, transparent, color-mix(in srgb, var(--nbt-sidebar-accent) 10%, transparent)), var(--nbt-sidebar);

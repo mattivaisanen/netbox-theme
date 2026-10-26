@@ -250,6 +250,19 @@ class PageTests(TestCase):
             self.assertEqual(sum(1 for _value, options in form.fields['color'].choices if isinstance(options, list)), 1)
         self.assertTrue(DashboardWidgetForm({'color': 'nbt-brand'}).is_valid())
 
+    def test_change_action_colors(self):
+        from core.choices import ObjectChangeActionChoices
+
+        self.assertEqual(ObjectChangeActionChoices.colors.get('create'), 'green')  # No theme: NetBox's.
+        self.client.post(reverse(URL + 'theme'), self.form_data(light_action_create='#7c3aed'))
+        self.assertEqual(ObjectChangeActionChoices.colors.get('create'), 'nbta-create')
+        self.assertEqual(ObjectChangeActionChoices.colors['delete'], 'nbta-delete')
+        page = self.client.get(reverse('home'))
+        self.assertContains(page, '--nbt-action-create: #7c3aed;')
+        self.assertContains(page, '.text-bg-nbta-create')
+        self.client.post(reverse(URL + 'theme_reset'))
+        self.assertEqual(ObjectChangeActionChoices.colors.get('create'), 'green')
+
     def test_status_colors(self):
         from dcim.choices import DeviceStatusChoices
         from ipam.choices import PrefixStatusChoices

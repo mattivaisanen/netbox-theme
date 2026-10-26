@@ -190,6 +190,11 @@
             <button type="button" class="btn btn-purple"><i class="mdi mdi-download" aria-hidden="true"></i> {% trans "Export" %}</button>
           </div>
           <div class="mb-3">
+            <span class="badge text-bg-nbta-create">{% trans "Create" %}</span>
+            <span class="badge text-bg-nbta-update">{% trans "Update" %}</span>
+            <span class="badge text-bg-nbta-delete">{% trans "Delete" %}</span>
+          </div>
+          <div class="mb-3">
             {% for color in status_colors %}
               <span class="badge text-bg-{{ color }}">{{ color }}</span>
             {% endfor %}
