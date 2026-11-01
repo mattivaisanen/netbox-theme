@@ -14,7 +14,7 @@ class ThemeConfig(PluginConfig):
     name = 'netbox_theme'
     verbose_name = 'Theme'
     description = "Colors, logos and fonts for NetBox's web UI, set by admins for every user."
-    version = '0.1.0'
+    version = '0.2.0'
     author = 'Matti'
     base_url = 'theme'
     # Only claim what CI tests (.github/workflows/test.yml).
