@@ -174,7 +174,8 @@ class LogoTests(SimpleTestCase):
 class ThemeFileTests(TestCase):
     def test_round_trip(self):
         theme = Theme(name='Ocean', light={'primary': '#112233'}, logo_light=logos.to_data_uri(PNG),
-                      edition='custom', edition_text='Acme', logo_height=48,
+                      edition='custom', edition_text='Acme', logo_height=48, site_title='Acme IPAM',
+                      login_message='Authorized use only',
                       custom_colors=[{'slug': 'brand', 'name': 'Brand', 'light': '#000000', 'dark': '#ffffff'}],
                       status_colors={'active': 'nbt-brand', 'gone': 'nbt-gone'})
         loaded = transfer.load(json.dumps(transfer.dump(theme)).encode())
@@ -183,6 +184,7 @@ class ThemeFileTests(TestCase):
         self.assertEqual(loaded['dark'], colors.NETBOX['dark'])
         self.assertEqual(loaded['logo_light'], theme.logo_light)
         self.assertEqual((loaded['edition'], loaded['edition_text']), ('custom', 'Acme'))
+        self.assertEqual((loaded['site_title'], loaded['login_message']), ('Acme IPAM', 'Authorized use only'))
         self.assertEqual((loaded['logo_height'], loaded['logo_margin_top']), (48, 12))
         self.assertEqual(loaded['custom_colors'][0]['name'], 'Brand')
         self.assertEqual(loaded['status_colors'], {'active': 'nbt-brand'})
@@ -321,6 +323,21 @@ class PageTests(TestCase):
         self.assertNotContains(page, '.navbar-brand-image.hide-theme-dark { content')
         self.assertEqual(self.client.get(reverse(URL + 'logo', args=['login_dark']))['Content-Type'], 'image/png')
         self.assertEqual(self.client.get(reverse(URL + 'logo', args=['nope'])).status_code, 404)
+
+    def test_site_title_and_login_message(self):
+        self.client.post(reverse(URL + 'theme'), self.form_data(
+            site_title='Acme </script> IPAM', login_message='Line one\nLine "two"',
+        ))
+        self.client.logout()
+        page = self.client.get(reverse('login'))
+        # Title text goes through json_script, so it cannot close the script.
+        self.assertContains(page, '"Acme \\u003C/script\\u003E IPAM"')
+        self.assertNotContains(page, 'Acme </script>')
+        self.assertContains(page, 'content: "Line\\000020one\\00000aLine')
+        self.client.force_login(self.admin)
+        response = self.client.post(reverse(URL + 'theme'), self.form_data(site_title='x' * 51))
+        self.assertEqual(response.status_code, 200)  # Too long: shown again, not saved.
+        self.assertEqual(Theme.objects.get().site_title, 'Acme </script> IPAM')
 
     def test_favicon(self):
         ico = b'\x00\x00\x01\x00' + b'\x00' * 32

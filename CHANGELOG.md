@@ -4,6 +4,11 @@
 
 New:
 
+- Site title: replace "NetBox" at the end of browser tab titles with your
+  own name (*Logo and label → Browser tab*).
+- Login message: plain text shown under the logo on the login page, such
+  as a usage notice.
+
 - Favicon: upload your own browser tab icon (ICO, SVG, PNG, JPEG, GIF or
   WebP) under *Logo and label*. It shows on every page and the login page,
   travels in theme files and goes back to NetBox's with *Reset* or *Restore

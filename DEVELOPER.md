@@ -53,6 +53,12 @@ import, a regex on the form).
    and adding the custom text with `::after`. The text goes through
    `css_string()`, which escapes everything but letters and digits.
 
+   The login message (`css.login_message()`) is added the same way, with
+   `::after` on the login page's logo block, `white-space: pre-line` keeping
+   line breaks.
+   The site title goes out with `json_script`; a small script replaces the
+   ` | NetBox` end of `document.title` and watches `<title>` for HTMX swaps.
+
 5. Logo height and spacing (`css.logo_size()`).
 6. Widget colors (`custom_colors.css()`): `--nbt-w-<slug>` per mode and a
    `.text-bg-nbt-<slug>` rule each.
@@ -153,6 +159,8 @@ Check these on every NetBox upgrade; `colors.NETBOX` should match too.
 | `templates/base/layout.html` logo `<img class="navbar-brand-image hide-theme-dark|light">`, `login.html` `<img class="logo hide-theme-dark|light">` | Logo swap. |
 | `templates/base/base.html` `<link rel="icon">` before `{% plugin_head %}` | Favicon. |
 | `.navbar-vertical.navbar-expand-lg .navbar-brand` padding, `.navbar-brand-image` height | Logo size and spacing. |
+| `base/base.html` `<title>... \| NetBox</title>`, `data-netbox-url-name` on `<html>` | Site title; login message only on `login`. |
+| `login.html` logo block `.page-center .container-tight > .text-center.mb-4` | Login message. |
 | `.netbox-edition` (`base/layout.html`, `login.html`), sidebar `.fs-5` (.75rem) and login (.875rem) sizes | Edition label. |
 | `setmode.js` sets `data-bs-theme` on `<html>` | Mode selectors; the editor watches it to re-preview. |
 

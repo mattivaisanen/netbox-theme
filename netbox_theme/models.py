@@ -20,7 +20,7 @@ __all__ = ('EditionChoices', 'FontFile', 'Theme')
 
 # Bump CACHE_VERSION whenever a model changes, so no process reads objects
 # another version cached.
-CACHE_VERSION = 3
+CACHE_VERSION = 4
 CACHE_KEY = f'netbox_theme:v{CACHE_VERSION}:current'
 FONTS_CACHE_KEY = f'netbox_theme:v{CACHE_VERSION}:fonts'
 
@@ -60,6 +60,10 @@ class Theme(models.Model):
         verbose_name=_('edition label'), max_length=10, choices=EditionChoices.choices, default=EditionChoices.NETBOX,
     )
     edition_text = models.CharField(verbose_name=_('edition label text'), max_length=50, blank=True)
+    # Replaces "NetBox" at the end of every browser tab title. Blank is NetBox's.
+    site_title = models.CharField(verbose_name=_('site title'), max_length=50, blank=True)
+    # Text shown under the logo on the login page (plain text, line breaks kept).
+    login_message = models.TextField(verbose_name=_('login page message'), max_length=500, blank=True)
     # Named colors for widgets and statuses (custom_colors.py).
     custom_colors = models.JSONField(verbose_name=_('custom colors'), default=list, blank=True)
     # {status value: color name or nbt-<slug>} (statuses.py).

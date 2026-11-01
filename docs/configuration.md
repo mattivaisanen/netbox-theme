@@ -47,6 +47,8 @@ permission.
   "logo_margin_bottom": 12,
   "edition": "netbox",
   "edition_text": "",
+  "site_title": "",
+  "login_message": "",
   "custom_colors": [{"slug": "brand", "name": "Brand", "light": "#0b63c5", "dark": "#5aa9ff"}],
   "status_colors": {"active": "nbt-brand", "planned": "purple"},
   "typography": {"body_family": "font:Acme Sans", "headings_family": "", "mono_family": "system-mono",

@@ -8,6 +8,29 @@ html[data-bs-theme=dark] { {{ dark_variables }} }
 {% if logo_login_dark %}html[data-bs-theme] img.logo.hide-theme-light { content: url("{{ logo_login_dark }}"); }{% endif %}
 </style>
 <style id="nbt-theme-edition">{{ edition_css }}</style>
+<style id="nbt-theme-login">{{ login_css }}</style>
+{{ site_title|json_script:"nbt-site-title" }}
+<script>
+  // Site title: "Devices | NetBox" becomes "Devices | <site title>", also
+  // when HTMX changes the title. The editor calls nbtApplySiteTitle() live.
+  (function () {
+    var source = document.getElementById('nbt-site-title'), shown = 'NetBox';
+    window.nbtApplySiteTitle = function () {
+      var name = JSON.parse(source.textContent) || 'NetBox', title = document.title, base = null;
+      [' | NetBox', ' | ' + shown].forEach(function (suffix) {
+        if (base === null && title.slice(-suffix.length) === suffix) { base = title.slice(0, -suffix.length); }
+      });
+      if (base === null) { return; }
+      shown = name;
+      if (base + ' | ' + name !== title) { document.title = base + ' | ' + name; }
+    };
+    window.nbtApplySiteTitle();
+    var element = document.querySelector('title');
+    if (element) {
+      new MutationObserver(window.nbtApplySiteTitle).observe(element, {childList: true, characterData: true, subtree: true});
+    }
+  })();
+</script>
 <style id="nbt-theme-logo-size">{{ logo_size_css }}</style>
 <style id="nbt-theme-custom-colors">{{ custom_color_css }}</style>
 <style id="nbt-theme-fonts">{{ font_faces }}</style>
