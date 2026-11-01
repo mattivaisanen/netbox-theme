@@ -1,6 +1,6 @@
 from django.contrib import messages
 from django.db import transaction
-from django.contrib.auth.mixins import PermissionRequiredMixin
+from django.contrib.auth.mixins import UserPassesTestMixin
 from django.core.exceptions import ValidationError
 from django.http import Http404, HttpResponse, JsonResponse
 from django.shortcuts import redirect, render
@@ -13,15 +13,18 @@ from .forms import ThemeForm, ThemeImportForm, field_name
 from .models import FontFile, Theme
 from .template_content import ThemeHead
 
-PERMISSION = 'netbox_theme.change_theme'
 # The weight each font slot's sample is drawn in (fonts.SLOTS).
 SAMPLE_WEIGHTS = {'regular': 400, 'medium': 500, 'bold': 600, 'italic': 400}
 HOME = 'plugins:netbox_theme:theme'
 
 
-class ThemeAdminMixin(PermissionRequiredMixin):
-    """Theme pages are for users with `change_theme` (superusers have it)."""
-    permission_required = PERMISSION
+class ThemeAdminMixin(UserPassesTestMixin):
+    """
+    The theme changes NetBox for everyone, so only superusers edit it; no
+    permission can grant it. Others get 403, anonymous users the login page.
+    """
+    def test_func(self):
+        return self.request.user.is_superuser
 
 
 class ThemeView(ThemeAdminMixin, View):

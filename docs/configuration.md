@@ -20,12 +20,9 @@ Everything else is set under **Plugins → Theme**.
 
 ## Permissions
 
-| Permission | Allows |
-| --- | --- |
-| `netbox_theme.change_theme` | Opening the theme editor, saving, restoring defaults, export and import |
-
-Superusers have it. Everyone sees the saved theme and logo; that needs no
-permission.
+Only superusers open the theme editor, save, restore defaults, export and
+import: the theme changes NetBox for everyone, so no permission grants it.
+Everyone sees the saved theme and logo; that needs no permission.
 
 ## Theme files
 

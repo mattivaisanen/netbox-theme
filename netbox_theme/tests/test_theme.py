@@ -217,10 +217,21 @@ class PageTests(TestCase):
         page = self.client.get(reverse('home'))
         self.assertNotContains(page, 'id="nbt-theme"')
 
-    def test_admins_only(self):
+    def test_superusers_only(self):
+        # Even a user granted change_theme cannot edit the global theme.
+        from django.contrib.contenttypes.models import ContentType
+        from users.models import ObjectPermission
+
+        permission = ObjectPermission.objects.create(name='theme', actions=['view', 'change'])
+        permission.object_types.add(ContentType.objects.get_for_model(Theme))
+        permission.users.add(self.user)
         self.client.force_login(self.user)
-        self.assertEqual(self.client.get(reverse(URL + 'theme')).status_code, 403)
-        self.assertEqual(self.client.post(reverse(URL + 'theme_reset')).status_code, 403)
+        for name in ('theme', 'theme_export'):
+            self.assertEqual(self.client.get(reverse(URL + name)).status_code, 403, name)
+        for name in ('theme', 'theme_reset', 'theme_import'):
+            self.assertEqual(self.client.post(reverse(URL + name)).status_code, 403, name)
+        self.client.logout()
+        self.assertEqual(self.client.get(reverse(URL + 'theme')).status_code, 302)
 
     def test_save_applies_everywhere(self):
         self.assertEqual(self.client.get(reverse(URL + 'theme')).status_code, 200)
