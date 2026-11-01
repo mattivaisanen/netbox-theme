@@ -46,6 +46,10 @@ web UI with a live preview; nothing needs a restart.
   heading case and tabular numbers (digits that line up in columns).
 - **Edition label.** Keep, hide or replace the "Community" text under the
   logo (sidebar and login page).
+- **Site title.** Replace "NetBox" at the end of browser tab titles
+  ("Devices | Acme IPAM").
+- **Login message.** Plain text under the logo on the login page, such as
+  a usage notice.
 - **Reset** in each section puts just that section back to NetBox's
   defaults (saved with *Save*).
 - **Restore NetBox defaults** deletes the saved theme; NetBox then looks
@@ -55,7 +59,8 @@ web UI with a live preview; nothing needs a restart.
 
 ## What it does not do
 
-- The favicon and the page title stay NetBox's.
+- Page titles keep their own first part ("Devices"); only "NetBox" after
+  it is replaced.
 - The release line at the bottom of the sidebar stays NetBox's.
 - The gray scale Tabler uses for a few details (icons, disabled controls)
   is left as is; page, card, text and border colors cover the rest.

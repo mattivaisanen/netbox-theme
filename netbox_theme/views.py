@@ -81,6 +81,7 @@ class ThemeView(ThemeAdminMixin, View):
             'favicon': ThemeHead.favicon_url(theme),
             'netbox_palette_text': css.netbox_palette_text(),
             'edition_css': css.edition(form['edition'].value(), form['edition_text'].value() or ''),
+            'site_title': (form['site_title'].value() or '').strip(),
             'logo_size_css': self.logo_size_css(form),
             'custom_color_css': mark_safe(custom_colors.css(self.valid_custom_colors(form))),
             # Fonts: saved files, the settings as edited, and what each family select offers.

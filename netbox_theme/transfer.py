@@ -6,6 +6,7 @@ Theme files: export the saved theme as JSON and import one back.
      "logo_login_light": "data:...", "logo_login_dark": "data:...",
      "favicon": "data:...",
      "edition": "netbox" | "hidden" | "custom", "edition_text": "...",
+     "site_title": "...", "login_message": "...",
      "logo_height": 32, "logo_margin_top": 12, "logo_margin_bottom": 12,
      "custom_colors": [{"slug", "name", "light", "dark"}, ...],
      "status_colors": {"active": "green" | "nbt-<slug>", ...},
@@ -42,6 +43,8 @@ def dump(theme):
         'favicon': theme.favicon,
         'edition': theme.edition,
         'edition_text': theme.edition_text,
+        'site_title': theme.site_title,
+        'login_message': theme.login_message,
         'logo_height': theme.logo_height,
         'logo_margin_top': theme.logo_margin_top,
         'logo_margin_bottom': theme.logo_margin_bottom,
@@ -75,10 +78,15 @@ def load(raw):
     edition_text = data.get('edition_text') or ''
     if edition not in EditionChoices.values or not isinstance(edition_text, str):
         raise ValidationError(_('Unknown edition label setting.'))
+    site_title, login_message = data.get('site_title') or '', data.get('login_message') or ''
+    if not isinstance(site_title, str) or not isinstance(login_message, str):
+        raise ValidationError(_('Site title and login message must be text.'))
     return {
         'name': name.strip()[:100] or 'Imported',
         'edition': edition,
         'edition_text': edition_text.strip()[:50],
+        'site_title': site_title.strip()[:50],
+        'login_message': login_message.strip()[:500],
         'light': colors.validate(data.get('light', {}), 'light'),
         'dark': colors.validate(data.get('dark', {}), 'dark'),
         # A file without a logo keeps the current one (themes made by hand or

@@ -43,6 +43,14 @@ class ThemeForm(forms.Form):
     edition = forms.ChoiceField(label=_('Edition label'), choices=EditionChoices.choices,
                                 help_text=_('The "Community" text under the logo and on the login page.'))
     edition_text = forms.CharField(label=_('Text'), max_length=50, required=False)
+    site_title = forms.CharField(
+        label=_('Site title'), max_length=50, required=False,
+        help_text=_('Replaces "NetBox" in browser tab titles. Leave empty for NetBox.'),
+    )
+    login_message = forms.CharField(
+        label=_('Message'), max_length=500, required=False, widget=forms.Textarea(attrs={'rows': 3}),
+        help_text=_('Plain text shown under the logo on the login page.'),
+    )
     logo_height = forms.IntegerField(label=_('Height'), min_value=16, max_value=120)
     logo_margin_top = forms.IntegerField(label=_('Space above'), min_value=0, max_value=80)
     logo_margin_bottom = forms.IntegerField(label=_('Space below'), min_value=0, max_value=80)
@@ -176,6 +184,8 @@ class ThemeForm(forms.Form):
         theme.name = data['name']
         theme.edition = data['edition']
         theme.edition_text = data['edition_text'].strip()
+        theme.site_title = data['site_title'].strip()
+        theme.login_message = data['login_message'].strip()
         theme.logo_height = data['logo_height']
         theme.logo_margin_top = data['logo_margin_top']
         theme.logo_margin_bottom = data['logo_margin_bottom']
@@ -201,6 +211,8 @@ class ThemeForm(forms.Form):
             'name': theme.name if theme else 'Custom',
             'edition': theme.edition if theme else EditionChoices.NETBOX,
             'edition_text': theme.edition_text if theme else '',
+            'site_title': theme.site_title if theme else '',
+            'login_message': theme.login_message if theme else '',
             'custom_colors': custom_colors.stored(theme),
             'status_colors': statuses.stored(theme),
             'typography': fonts.with_defaults(theme.typography if theme else {}),

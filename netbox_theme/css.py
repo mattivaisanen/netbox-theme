@@ -29,6 +29,20 @@ def edition(choice, text):
     return ''
 
 
+def login_message(text):
+    """
+    The login page message, drawn under the logo with ::after (no NetBox
+    template is overridden). Line breaks are kept; css_string() escapes them.
+    """
+    if not text:
+        return ''
+    return mark_safe(
+        'html[data-netbox-url-name=login] .page-center .container-tight > .text-center.mb-4::after'
+        f' {{ content: {css_string(text)}; display: block; margin-top: 1rem; white-space: pre-line;'
+        ' color: var(--tblr-secondary-color); }'
+    )
+
+
 def logo_size(height, top, bottom):
     """
     Sidebar logo height and the space above and below it, in pixels (ints,

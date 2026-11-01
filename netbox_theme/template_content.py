@@ -31,6 +31,8 @@ class ThemeHead(PluginTemplateExtension):
                 **self.logo_urls(theme),
                 'favicon': self.favicon_url(theme),
                 'edition_css': css.edition(theme.edition, theme.edition_text),
+                'login_css': css.login_message(theme.login_message),
+                'site_title': theme.site_title,
                 'logo_size_css': css.logo_size(theme.logo_height, theme.logo_margin_top, theme.logo_margin_bottom),
                 **self.font_context(theme.typography),
                 'netbox_palette_text': css.netbox_palette_text(),

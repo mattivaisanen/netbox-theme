@@ -147,6 +147,13 @@
           <div class="form-text mb-3">
             {% trans "SVG, PNG, JPEG, GIF or WebP. Without a logo, NetBox's own is shown." %}
           </div>
+          <div class="mb-3">
+            <label class="form-label" for="{{ form.login_message.id_for_label }}">{{ form.login_message.label }}</label>
+            <textarea name="{{ form.login_message.html_name }}" id="{{ form.login_message.id_for_label }}" rows="3"
+                      maxlength="500" class="form-control">{{ form.login_message.value|default_if_none:'' }}</textarea>
+            {% for error in form.login_message.errors %}<div class="text-danger">{{ error }}</div>{% endfor %}
+            <div class="form-text">{{ form.login_message.help_text }}</div>
+          </div>
           <h3 class="h4 pt-3 border-top">{% trans "Browser tab" %}</h3>
           {% with upload=favicon_upload.0 clear=favicon_upload.1 url=favicon_upload.2 slot='favicon' %}
             {% include 'netbox_theme/inc/logo_upload.html' %}
@@ -167,6 +174,14 @@
               {% for error in form.edition_text.errors %}<div class="text-danger">{{ error }}</div>{% endfor %}
             </div>
             <div class="form-text mt-1">{{ form.edition.help_text }}</div>
+          </div>
+          <div class="pt-3 mt-3 border-top">
+            <label class="form-label" for="{{ form.site_title.id_for_label }}">{{ form.site_title.label }}</label>
+            <input type="text" name="{{ form.site_title.html_name }}" id="{{ form.site_title.id_for_label }}"
+                   value="{{ form.site_title.value|default_if_none:'' }}" maxlength="50" class="form-control"
+                   placeholder="NetBox">
+            {% for error in form.site_title.errors %}<div class="text-danger">{{ error }}</div>{% endfor %}
+            <div class="form-text">{{ form.site_title.help_text }}</div>
           </div>
         </div>
       </div>
@@ -453,6 +468,13 @@
     edition.addEventListener('change', applyEdition);
     editionText.addEventListener('input', applyEdition);
 
+    // Site title: the tab title follows as it is typed (inc/head.html).
+    var siteTitle = document.getElementById('{{ form.site_title.id_for_label }}');
+    siteTitle.addEventListener('input', function () {
+      document.getElementById('nbt-site-title').textContent = JSON.stringify(siteTitle.value.trim());
+      window.nbtApplySiteTitle();
+    });
+
     // Logo height and spacing: same CSS as css.logo_size().
     var sizes = document.querySelectorAll('input[data-nbt-logo-size]');
     function applyLogoSize() {
@@ -684,6 +706,8 @@
           setValue(document.querySelector('input[name=' + pair[0] + ']'), pair[1]);
         });
         setValue(edition, 'netbox');
+        setValue(siteTitle, '');
+        setValue(document.querySelector('textarea[name=login_message]'), '');
       },
       'custom-colors': function () { rows.querySelectorAll('.nbt-custom-color').forEach(function (row) { row.remove(); }); },
       'status-colors': function () {
