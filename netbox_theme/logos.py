@@ -37,11 +37,27 @@ def sniff(data, icon=False):
     return None
 
 
+def too_large(size):
+    """The error for a logo or favicon of `size` bytes over `max_logo_kb`, else None."""
+    if size > get_setting('max_logo_kb') * 1024:
+        return ValidationError(_('Logo is larger than {kb} KB.').format(kb=get_setting('max_logo_kb')))
+    return None
+
+
+def from_upload(upload, icon=False):
+    """
+    An uploaded logo (or with `icon`, favicon) as a `data:` URI. The size is
+    checked before the file is read, so a huge upload never lands in memory.
+    """
+    if error := too_large(upload.size):
+        raise error
+    return to_data_uri(upload.read(), icon)
+
+
 def to_data_uri(data, icon=False):
     """A logo (or with `icon`, favicon) file's bytes as a `data:` URI. Raises ValidationError."""
-    limit = get_setting('max_logo_kb') * 1024
-    if len(data) > limit:
-        raise ValidationError(_('Logo is larger than {kb} KB.').format(kb=get_setting('max_logo_kb')))
+    if error := too_large(len(data)):
+        raise error
     content_type = sniff(data, icon)
     if content_type is None:
         if icon:

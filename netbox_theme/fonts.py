@@ -206,9 +206,7 @@ def read(data, filename=''):
     showing users what they uploaded; slots decide how it is used).
     Raises ValidationError for anything that is not a font we accept.
     """
-    limit = get_setting('max_font_kb')
-    if len(data) > limit * 1024:
-        raise ValidationError(_('{name}: larger than {kb} KB.').format(name=filename, kb=limit))
+    check_size(len(data), filename)
     fmt = sniff(data)
     if fmt is None:
         raise ValidationError(_('{name}: not a WOFF2, WOFF, TTF or OTF font.').format(name=filename))
@@ -221,6 +219,13 @@ def read(data, filename=''):
     info['format'] = fmt
     info['family'] = clean_family(info['family'])
     return info
+
+
+def check_size(size, filename):
+    """Raises ValidationError for a font file of `size` bytes over `max_font_kb`."""
+    limit = get_setting('max_font_kb')
+    if size > limit * 1024:
+        raise ValidationError(_('{name}: larger than {kb} KB.').format(name=filename, kb=limit))
 
 
 def clean_family(name):

@@ -18,6 +18,12 @@ New:
   theme instead of NetBox's fixed green, blue and red. A theme saved earlier
   gives Create and Delete its success and danger colors.
 
+Fixed:
+
+- Logos, favicons, fonts and theme files that are too large are turned away
+  before they are read, instead of being loaded into memory first.
+- Font files are served with the same locked-down security headers as logos.
+
 ## 0.1.0 (2026-10-26)
 
 First release.

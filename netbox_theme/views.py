@@ -222,4 +222,6 @@ class FontView(View):
         response = HttpResponse(bytes(font.data), content_type=fonts.FORMATS[font.format][0])
         response['Cache-Control'] = 'public, max-age=31536000, immutable'
         response['X-Content-Type-Options'] = 'nosniff'
+        # Like logos: nothing in this response may run or load anything.
+        response['Content-Security-Policy'] = "default-src 'none'; sandbox"
         return response
