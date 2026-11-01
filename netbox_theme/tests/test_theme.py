@@ -153,6 +153,18 @@ class LogoTests(SimpleTestCase):
         with self.assertRaises(ValidationError):
             logos.to_data_uri(PNG + b'\x00' * 600 * 1024)
 
+    def test_too_large_upload_is_not_read(self):
+        class Huge:
+            size = 600 * 1024
+
+            def read(self):
+                raise AssertionError('read before the size check')
+
+        with self.assertRaises(ValidationError):
+            logos.from_upload(Huge())
+        with self.assertRaises(ValidationError):
+            fonts.check_size(3 * 1024 * 1024, 'big.ttf')
+
     def test_import_rechecks_content(self):
         disguised = 'data:image/png;base64,' + base64.b64encode(b'<html></html>').decode()
         with self.assertRaises(ValidationError):

@@ -69,7 +69,7 @@ class ThemeForm(forms.Form):
 
     def clean_logo(self, slot):
         upload = self.cleaned_data.get(f'logo_{slot}')
-        return logos.to_data_uri(upload.read()) if upload else None
+        return logos.from_upload(upload) if upload else None
 
     def clean_logo_light(self):
         return self.clean_logo('light')
@@ -85,7 +85,7 @@ class ThemeForm(forms.Form):
 
     def clean_favicon(self):
         upload = self.cleaned_data.get('favicon')
-        return logos.to_data_uri(upload.read(), icon=True) if upload else None
+        return logos.from_upload(upload, icon=True) if upload else None
 
     def clean(self):
         data = super().clean()
@@ -111,6 +111,7 @@ class ThemeForm(forms.Form):
         for role, slot in sorted(fonts.ALL_SLOTS):
             upload = self.files.get(f'font_{role}_{slot}') if self.files else None
             if upload:
+                fonts.check_size(upload.size, upload.name)  # Before reading it into memory.
                 raw = upload.read()
                 uploads[(role, slot)] = (fonts.read(raw, upload.name), raw, upload.name)
             elif self.data.get(f'font_{role}_{slot}_remove'):
@@ -219,4 +220,7 @@ class ThemeImportForm(forms.Form):
 
     def clean_file(self):
         """The theme's field values (transfer.load), or a form error."""
-        return transfer.load(self.cleaned_data['file'].read())
+        upload = self.cleaned_data['file']
+        if upload.size > transfer.MAX_FILE_BYTES:  # Before reading it into memory.
+            raise ValidationError(_('Theme file is too large.'))
+        return transfer.load(upload.read())
