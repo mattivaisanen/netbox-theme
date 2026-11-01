@@ -33,6 +33,9 @@ Fixed:
 - Logos, favicons, fonts and theme files that are too large are turned away
   before they are read, instead of being loaded into memory first.
 - Font files are served with the same locked-down security headers as logos.
+- Focused form fields and search boxes had NetBox's teal border, and link
+  buttons turned teal on hover, whatever the theme. Both follow the theme's
+  primary and link colors now.
 
 ## 0.1.0 (2026-10-26)
 
