@@ -18,6 +18,11 @@ New:
   theme instead of NetBox's fixed green, blue and red. A theme saved earlier
   gives Create and Delete its success and danger colors.
 
+Changed:
+
+- Only superusers can open the theme editor, save, import, export or
+  restore defaults. The `change_theme` permission no longer grants it.
+
 ## 0.1.0 (2026-10-26)
 
 First release.
