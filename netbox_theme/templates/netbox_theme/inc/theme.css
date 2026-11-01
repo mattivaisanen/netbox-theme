@@ -147,6 +147,16 @@ html[data-bs-theme] .active > .page-link { color: var(--nbt-primary-fg); }
 html[data-bs-theme] .footer .text-primary { color: var(--nbt-text) !important; }
 html[data-bs-theme] .list-group-item.active { border-left-color: var(--nbt-primary); }
 html[data-bs-theme] .page-link:hover .page-item-title { color: var(--nbt-primary); }
+/* Focused fields: netbox.css writes NetBox's light teal (#80c2be) as the border. */
+html[data-bs-theme] .form-control:focus,
+html[data-bs-theme] .form-select:focus,
+html[data-bs-theme] .form-check-input:focus,
+html[data-bs-theme] .input-group-flat:focus-within .form-control,
+html[data-bs-theme] .input-group-flat:focus-within .input-group-text,
+html[data-bs-theme] .plugin-dropdown_input.focus .ts-dropdown .dropdown-input,
+html[data-bs-theme] .focus .ts-control { border-color: color-mix(in srgb, var(--nbt-primary) 50%, var(--nbt-body-bg)) !important; }
+/* Link buttons on hover: netbox.css writes NetBox's dark teal (#006a64). */
+html[data-bs-theme] .btn-link:hover { color: color-mix(in srgb, var(--nbt-link) 80%, var(--nbt-text)); }
 html[data-bs-theme] .status-primary { --tblr-status-color: var(--nbt-primary); --tblr-status-color-rgb: var(--nbt-primary-rgb); }
 html[data-bs-theme] .toast-primary { --tblr-toast-color: var(--nbt-primary); }
 html[data-bs-theme] .ts-wrapper.multi .ts-control > div.active { background: var(--nbt-primary); }

@@ -223,6 +223,9 @@ class PageTests(TestCase):
         self.assertContains(page, '--nbt-button-delete: #d63939;')
         self.assertContains(page, '--tblr-red-fg: var(--nbt-button-delete-on);')
         self.assertContains(page, reverse(URL + 'logo', args=['light']))
+        # Focused fields and link buttons lose NetBox's fixed teal.
+        self.assertContains(page, 'html[data-bs-theme] .form-select:focus,')
+        self.assertContains(page, 'html[data-bs-theme] .btn-link:hover')
 
         self.assertNotContains(page, 'img.logo')  # The login page keeps NetBox's logo.
         # Dark mode falls back to the light logo; scripts in an opened SVG are sandboxed.

@@ -18,6 +18,12 @@ New:
   theme instead of NetBox's fixed green, blue and red. A theme saved earlier
   gives Create and Delete its success and danger colors.
 
+Fixed:
+
+- Focused form fields and search boxes had NetBox's teal border, and link
+  buttons turned teal on hover, whatever the theme. Both follow the theme's
+  primary and link colors now.
+
 ## 0.1.0 (2026-10-26)
 
 First release.
