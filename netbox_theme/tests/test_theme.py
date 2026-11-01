@@ -9,7 +9,7 @@ from django.contrib.auth import get_user_model
 from django.core.cache import cache
 from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import SimpleUploadedFile
-from django.test import SimpleTestCase, TestCase
+from django.test import SimpleTestCase, TestCase, override_settings
 from django.urls import reverse
 
 from .. import colors, custom_colors, fonts, logos, transfer
@@ -18,6 +18,10 @@ from ..models import FontFile, Theme
 URL = 'plugins:netbox_theme:'
 PNG = b'\x89PNG\r\n\x1a\n' + b'\x00' * 32
 SVG = b'<?xml version="1.0"?>\n<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10"/>'
+# The theme is cached under a fixed key. Tests keep it in memory, so a test
+# run inside a live NetBox never leaves its theme (or "no theme") in the
+# shared cache, where live NetBox would read it.
+LOCAL_CACHE = override_settings(CACHES={'default': {'BACKEND': 'django.core.cache.backends.locmem.LocMemCache'}})
 
 
 class ColorTests(SimpleTestCase):
@@ -171,6 +175,7 @@ class LogoTests(SimpleTestCase):
             logos.check_data_uri(disguised)
 
 
+@LOCAL_CACHE
 class ThemeFileTests(TestCase):
     def test_round_trip(self):
         theme = Theme(name='Ocean', light={'primary': '#112233'}, logo_light=logos.to_data_uri(PNG),
@@ -195,6 +200,7 @@ class ThemeFileTests(TestCase):
                 transfer.load(raw)
 
 
+@LOCAL_CACHE
 class PageTests(TestCase):
     @classmethod
     def setUpTestData(cls):
