@@ -81,7 +81,10 @@ file calls its own family does not matter.
 by `views.FontView` with a year-long cache. `fonts.read()` checks the format
 by its magic bytes and reads family, weight, style and `fvar` from TTF, OTF
 and WOFF tables (WOFF2 needs Brotli, so its values come from the file name);
-they are only shown to the user (`detected`). `FontFile.listed()` caches
+they are only shown to the user (`detected`). Only the `name`, `OS/2` and
+`head` tables are read (`fonts.READ_TABLES`); in a WOFF they are inflated
+with a 1 MB cap (`MAX_TABLE_BYTES`), so a small upload cannot expand into a
+large one in memory. Any other table is only checked for presence. `FontFile.listed()` caches
 plain `FontRecord`s, not model instances, under a versioned key
 (`CACHE_VERSION`, bump it when a model changes).
 
@@ -137,6 +140,11 @@ otherwise. `inc/theme.css` draws `.text-bg-nbta-<action>` from the
 
 ## NetBox internals this depends on
 
+`ThemeConfig.max_version` stops the plugin loading on an untested NetBox
+minor release. On an upgrade, check this table and the CSS below, add the
+release to the CI matrix, then raise `max_version` and `min_version` as
+needed.
+
 | NetBox internal | Why |
 | --- | --- |
 | `extras.dashboard.forms.DashboardWidgetForm.base_fields['color']` (a `ChoiceField`) | Widget colors. Missing field: logged, nothing added. |
@@ -181,4 +189,11 @@ python manage.py test netbox_theme
 ```
 
 CI (`.github/workflows/test.yml`) runs on pull requests only, on the oldest
-supported NetBox and the latest tested one.
+supported NetBox and the latest tested one. Docs-only changes skip it, and a
+new push cancels the run in progress.
+
+## Lint
+
+`ruff check .` with the settings in `pyproject.toml` (line length 120,
+pycodestyle, pyflakes and import order; NetBox's packages are their own
+import group). It is not run in CI, to save Actions minutes.

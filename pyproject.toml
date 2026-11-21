@@ -8,18 +8,38 @@ version = "0.2.0"
 description = "Colors, logos and fonts for NetBox's web UI, set by admins for every user."
 requires-python = ">=3.10"
 license = "Apache-2.0"
+license-files = ["LICENSE"]
 readme = "README.md"
 authors = [{ name = "Matti" }]
 # No runtime dependencies beyond NetBox (which brings Django). NetBox
 # versions are enforced at runtime by min_version in netbox_theme/__init__.py.
 dependencies = []
 
+[project.urls]
+Homepage = "https://github.com/mattivaisanen/netbox-theme"
+Documentation = "https://github.com/mattivaisanen/netbox-theme/tree/main/docs"
+Changelog = "https://github.com/mattivaisanen/netbox-theme/blob/main/CHANGELOG.md"
+
 [tool.setuptools.packages.find]
 include = ["netbox_theme*"]
 
+# Templates (HTML and the theme's CSS) are not Python files, so they must be
+# listed to end up in the wheel.
 [tool.setuptools.package-data]
-netbox_theme = [
-    "templates/netbox_theme/*.html",
-    "templates/netbox_theme/**/*.html",
-    "templates/netbox_theme/**/*.css",
-]
+netbox_theme = ["templates/**/*"]
+
+[tool.ruff]
+line-length = 120
+
+[tool.ruff.lint]
+# pycodestyle errors, pyflakes and import order.
+select = ["E", "F", "I"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["netbox_theme"]
+# NetBox's own packages (top-level modules inside NetBox) get their own group,
+# after Django and before this plugin's imports.
+section-order = ["future", "standard-library", "third-party", "netbox", "first-party", "local-folder"]
+
+[tool.ruff.lint.isort.sections]
+netbox = ["core", "extras", "netbox", "utilities"]

@@ -1,5 +1,22 @@
 # Changelog
 
+## Unreleased
+
+Changed:
+
+- The plugin declares NetBox 4.7 as its highest supported release. NetBox
+  will not start it on 4.8 or later until a release says it is tested
+  there, since it changes NetBox's status and change action colors.
+
+Fixed:
+
+- Reading an uploaded WOFF font only unpacks the parts needed to show its
+  name and weight, with a size limit, instead of every table in full.
+
+Docs:
+
+- Installation (including uninstalling) and usage guides in `docs/`.
+
 ## 0.2.0 (2026-11-01)
 
 New:

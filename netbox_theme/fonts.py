@@ -127,20 +127,48 @@ def sniff(data):
     return None
 
 
+# The only tables read() looks inside. Others are only checked for presence
+# (fvar: a variable font), so they are never decompressed.
+READ_TABLES = ('name', 'OS/2', 'head')
+# Largest decompressed WOFF table read() accepts. Real name/OS/2/head tables
+# are a few kilobytes; the cap stops a small upload expanding into hundreds
+# of megabytes in the web worker.
+MAX_TABLE_BYTES = 1024 * 1024
+
+
+def _inflate(raw, orig_length):
+    """A WOFF table's zlib data, decompressed to at most MAX_TABLE_BYTES. Raises ValueError."""
+    if orig_length > MAX_TABLE_BYTES:
+        raise ValueError('font table too large')
+    inflater = zlib.decompressobj()
+    table = inflater.decompress(raw, MAX_TABLE_BYTES)
+    if inflater.unconsumed_tail:
+        raise ValueError('font table too large')
+    return table
+
+
 def _tables(data, fmt):
-    """{tag: bytes} of an sfnt (TTF/OTF) or WOFF file's tables."""
+    """
+    {tag: bytes} of an sfnt (TTF/OTF) or WOFF file's tables. Only READ_TABLES
+    hold their contents; every other tag maps to b''.
+    """
     tables = {}
     if fmt == 'woff':
         count = struct.unpack_from('>H', data, 12)[0]
         for i in range(count):
             tag, offset, comp_length, orig_length, _checksum = struct.unpack_from('>4sIIII', data, 44 + 20 * i)
+            tag = tag.decode('latin-1')
+            if tag not in READ_TABLES:
+                tables[tag] = b''
+                continue
             raw = data[offset:offset + comp_length]
-            tables[tag.decode('latin-1')] = zlib.decompress(raw) if comp_length < orig_length else raw
+            tables[tag] = _inflate(raw, orig_length) if comp_length < orig_length else raw
     else:
         count = struct.unpack_from('>H', data, 4)[0]
         for i in range(count):
             tag, _checksum, offset, length = struct.unpack_from('>4sIII', data, 12 + 16 * i)
-            tables[tag.decode('latin-1')] = data[offset:offset + length]
+            tag = tag.decode('latin-1')
+            tables[tag] = data[offset:offset + length] if tag in READ_TABLES else b''
     return tables
 
 

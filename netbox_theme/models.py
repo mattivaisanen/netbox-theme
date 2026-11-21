@@ -14,6 +14,8 @@ from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
+from utilities.choices import ChoiceSet
+
 from . import colors, logos
 
 __all__ = ('EditionChoices', 'FontFile', 'Theme')
@@ -25,11 +27,17 @@ CACHE_KEY = f'netbox_theme:v{CACHE_VERSION}:current'
 FONTS_CACHE_KEY = f'netbox_theme:v{CACHE_VERSION}:fonts'
 
 
-class EditionChoices(models.TextChoices):
+class EditionChoices(ChoiceSet):
     """What the edition label ("Community") under the logo shows."""
-    NETBOX = 'netbox', _("NetBox's")
-    HIDDEN = 'hidden', _('Hidden')
-    CUSTOM = 'custom', _('Custom text')
+    NETBOX = 'netbox'
+    HIDDEN = 'hidden'
+    CUSTOM = 'custom'
+
+    CHOICES = (
+        (NETBOX, _("NetBox's")),
+        (HIDDEN, _('Hidden')),
+        (CUSTOM, _('Custom text')),
+    )
 _MISSING = object()
 
 
@@ -57,7 +65,7 @@ class Theme(models.Model):
         verbose_name=_('space below logo'), default=12, validators=[MaxValueValidator(80)],
     )
     edition = models.CharField(
-        verbose_name=_('edition label'), max_length=10, choices=EditionChoices.choices, default=EditionChoices.NETBOX,
+        verbose_name=_('edition label'), max_length=10, choices=EditionChoices, default=EditionChoices.NETBOX,
     )
     edition_text = models.CharField(verbose_name=_('edition label text'), max_length=50, blank=True)
     # Replaces "NetBox" at the end of every browser tab title. Blank is NetBox's.
