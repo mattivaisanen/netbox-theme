@@ -76,7 +76,7 @@ def load(raw):
     custom = custom_colors.clean(data.get('custom_colors') or [])
     status_colors = statuses.clean(data.get('status_colors') or {}, {entry['slug'] for entry in custom})
     edition_text = data.get('edition_text') or ''
-    if edition not in EditionChoices.values or not isinstance(edition_text, str):
+    if edition not in EditionChoices.values() or not isinstance(edition_text, str):
         raise ValidationError(_('Unknown edition label setting.'))
     site_title, login_message = data.get('site_title') or '', data.get('login_message') or ''
     if not isinstance(site_title, str) or not isinstance(login_message, str):

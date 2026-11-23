@@ -1,7 +1,7 @@
 from django.contrib import messages
-from django.db import transaction
 from django.contrib.auth.mixins import UserPassesTestMixin
 from django.core.exceptions import ValidationError
+from django.db import transaction
 from django.http import Http404, HttpResponse, JsonResponse
 from django.shortcuts import redirect, render
 from django.utils.safestring import mark_safe
@@ -62,7 +62,9 @@ class ThemeView(ThemeAdminMixin, View):
             'presets': [(slug, label) for slug, label, _colors in colors.PRESETS],
             # For the editor's script.
             'preset_colors': {slug: values for slug, _label, values in colors.PRESETS},
-            'editor_config': {'darkText': colors.DARK_TEXT, 'lightText': colors.LIGHT_TEXT, 'aspect': fonts.NETBOX_ASPECT},
+            'editor_config': {
+                'darkText': colors.DARK_TEXT, 'lightText': colors.LIGHT_TEXT, 'aspect': fonts.NETBOX_ASPECT,
+            },
             # A new custom color starts as NetBox's brand color.
             'new_color': {mode: colors.NETBOX[mode]['primary'] for mode in colors.MODES},
             'import_form': ThemeImportForm(),
@@ -71,8 +73,10 @@ class ThemeView(ThemeAdminMixin, View):
             'status_colors': ('primary', 'secondary', 'success', 'info', 'warning', 'danger'),
             'status_rows': self.status_rows(form),
             # The sample table's badges, drawn in the colors being edited.
-            'sample_statuses': [(value, label, chosen or default) for value, label, chosen, default in self.status_rows(form)
-                                if value in ('active', 'planned', 'offline', 'failed')],
+            'sample_statuses': [
+                (value, label, chosen or default) for value, label, chosen, default in self.status_rows(form)
+                if value in ('active', 'planned', 'offline', 'failed')
+            ],
             'netbox_colors': statuses.NETBOX_COLORS,
             'custom_color_options': self.valid_custom_colors(form),
             'favicon_upload': (form['favicon'], form['clear_favicon'], ThemeHead.favicon_url(theme)),
@@ -106,7 +110,8 @@ class ThemeView(ThemeAdminMixin, View):
         uploaded = FontFile.uploaded_roles() | {'body', 'headings', 'mono'}  # Preview the choice before files exist.
         return [
             (role, label, chosen[f'{role}_family'],
-             [(source, source_label, fonts.stack(source, role, uploaded)) for source, source_label in fonts.SOURCES[role]],
+             [(source, source_label, fonts.stack(source, role, uploaded))
+              for source, source_label in fonts.SOURCES[role]],
              [(slot, slot_label, files.get((role, slot)), SAMPLE_WEIGHTS[slot], style)
               for slot, slot_label, _weights, style in fonts.SLOTS[role]])
             for role, label in fonts.ROLES
@@ -123,7 +128,8 @@ class ThemeView(ThemeAdminMixin, View):
     @staticmethod
     def logo_size_css(form):
         try:
-            return css.logo_size(*(int(form[f].value()) for f in ('logo_height', 'logo_margin_top', 'logo_margin_bottom')))
+            fields = ('logo_height', 'logo_margin_top', 'logo_margin_bottom')
+            return css.logo_size(*(int(form[f].value()) for f in fields))
         except (TypeError, ValueError):
             return ''
 

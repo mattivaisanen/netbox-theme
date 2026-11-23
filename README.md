@@ -68,7 +68,8 @@ web UI with a live preview; nothing needs a restart.
 
 ## Requirements
 
-- NetBox **4.7** or later. Tested with NetBox 4.7.0 and 4.7.3.
+- NetBox **4.7**. Tested with NetBox 4.7.0 and 4.7.3; newer minor releases
+  are allowed once tested.
 - No other NetBox plugins.
 
 ## Installation
@@ -87,7 +88,9 @@ PLUGINS = ['netbox_theme']
 python manage.py migrate
 ```
 
+Full steps, including netbox-docker: [docs/installation.md](docs/installation.md).
 Settings and permissions: [docs/configuration.md](docs/configuration.md).
+Using the editor: [docs/usage.md](docs/usage.md).
 How it works inside: [DEVELOPER.md](DEVELOPER.md).
 
 ### Upgrading
@@ -99,6 +102,16 @@ python manage.py migrate
 
 Then restart NetBox. Check [CHANGELOG.md](CHANGELOG.md) for anything a
 release asks you to do.
+
+### Uninstalling
+
+Remove the plugin's tables (this deletes the saved theme; *Export* it first
+to keep it), then remove it from `PLUGINS` and uninstall the package:
+
+```bash
+python manage.py migrate netbox_theme zero
+pip uninstall netbox-theme
+```
 
 ## License
 

@@ -7,18 +7,23 @@ database row (models.Theme); without it NetBox looks exactly as shipped.
 Every page gets the theme's CSS variables in its <head> (template_content.py).
 See DEVELOPER.md for how the colors map onto NetBox's CSS.
 """
+from django.utils.translation import gettext_lazy as _
+
 from netbox.plugins import PluginConfig
 
 
 class ThemeConfig(PluginConfig):
     name = 'netbox_theme'
-    verbose_name = 'Theme'
+    verbose_name = _('Theme')
     description = "Colors, logos and fonts for NetBox's web UI, set by admins for every user."
     version = '0.2.0'
     author = 'Matti'
     base_url = 'theme'
-    # Only claim what CI tests (.github/workflows/test.yml).
+    # Only claim what CI tests (.github/workflows/test.yml). The plugin
+    # replaces NetBox's ChoiceSet.colors maps and the change action colors,
+    # so a new minor release must be checked before it is allowed.
     min_version = '4.7.0'
+    max_version = '4.7.99'
 
     default_settings = {
         # Largest logo file accepted, in kilobytes.

@@ -40,7 +40,7 @@ class ThemeForm(forms.Form):
     favicon = forms.FileField(
         label=_('Favicon'), required=False, help_text=_("ICO, SVG, PNG, JPEG, GIF or WebP. Leave empty for NetBox's."),
     )
-    edition = forms.ChoiceField(label=_('Edition label'), choices=EditionChoices.choices,
+    edition = forms.ChoiceField(label=_('Edition label'), choices=EditionChoices,
                                 help_text=_('The "Community" text under the logo and on the login page.'))
     edition_text = forms.CharField(label=_('Text'), max_length=50, required=False)
     site_title = forms.CharField(

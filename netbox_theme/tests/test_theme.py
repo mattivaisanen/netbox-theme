@@ -3,6 +3,7 @@ import base64
 import glob
 import json
 import struct
+import zlib
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -39,7 +40,8 @@ class ColorTests(SimpleTestCase):
 
     def test_buttons_follow_status_colors(self):
         # A theme saved before the button colors existed recolors its buttons too.
-        light = colors.complete({'success': '#00aa00', 'warning': '#ffee00', 'danger': '#aa0000', 'info': '#0000aa'}, 'light')
+        status = {'success': '#00aa00', 'warning': '#ffee00', 'danger': '#aa0000', 'info': '#0000aa'}
+        light = colors.complete(status, 'light')
         self.assertEqual(
             (light['button_clone'], light['button_edit'], light['button_delete'], light['button_import']),
             ('#00aa00', '#ffee00', '#aa0000', '#0000aa'),
@@ -71,7 +73,9 @@ class CustomColorTests(SimpleTestCase):
         cleaned = custom_colors.clean([{'name': ' Brand Blue ', 'light': '#0B63C5', 'dark': '#5aa9ff'}])
         self.assertEqual(cleaned, [{'slug': 'brand-blue', 'name': 'Brand Blue', 'light': '#0b63c5', 'dark': '#5aa9ff'}])
         # A renamed color keeps its slug, so widgets using it keep it.
-        renamed = custom_colors.clean([{'slug': 'brand-blue', 'name': 'Corporate', 'light': '#000000', 'dark': '#ffffff'}])
+        renamed = custom_colors.clean(
+            [{'slug': 'brand-blue', 'name': 'Corporate', 'light': '#000000', 'dark': '#ffffff'}],
+        )
         self.assertEqual(renamed[0]['slug'], 'brand-blue')
 
     def test_rejects(self):
@@ -122,6 +126,15 @@ class FontFileTests(SimpleTestCase):
     def test_rejects_other_files(self):
         with self.assertRaises(ValidationError):
             fonts.read(PNG, 'logo.ttf')
+
+    def test_woff_table_that_inflates_too_far_is_not_read(self):
+        # A 'name' table that claims 10 KB but inflates to 5 MB: reading stops
+        # at the cap and the file name guess stands.
+        bomb = zlib.compress(b'\x00' * 5 * 1024 * 1024)
+        header = b'wOFF' + b'\x00' * 8 + struct.pack('>H', 1) + b'\x00' * 30
+        entry = struct.pack('>4sIIII', b'name', 64, len(bomb), 10_000, 0)
+        info = fonts.read(header + entry + bomb, 'AcmeSans-Bold.woff')
+        self.assertEqual((info['family'], info['weight'], info['format']), ('Acme Sans', 700, 'woff'))
 
     def test_typography(self):
         with self.assertRaises(ValidationError):
@@ -339,7 +352,8 @@ class PageTests(TestCase):
         self.client.post(reverse(URL + 'theme'), self.form_data(logo_login_light=SimpleUploadedFile('l.png', PNG)))
         self.client.logout()
         page = self.client.get(reverse('login'))
-        self.assertContains(page, 'img.logo.hide-theme-dark { content: url("' + reverse(URL + 'logo', args=['login_light']))
+        login_logo = reverse(URL + 'logo', args=['login_light'])
+        self.assertContains(page, 'img.logo.hide-theme-dark { content: url("' + login_logo)
         self.assertNotContains(page, '.navbar-brand-image.hide-theme-dark { content')
         self.assertEqual(self.client.get(reverse(URL + 'logo', args=['login_dark']))['Content-Type'], 'image/png')
         self.assertEqual(self.client.get(reverse(URL + 'logo', args=['nope'])).status_code, 404)
@@ -374,7 +388,9 @@ class PageTests(TestCase):
         regular = SimpleUploadedFile('acme.ttf', sfnt('Acme Sans', 400))
         self.client.post(reverse(URL + 'theme'), self.form_data(font_body_regular=regular))
         font = FontFile.objects.get()
-        self.assertEqual((font.role, font.slot, font.detected, font.format), ('body', 'regular', 'Acme Sans Regular', 'ttf'))
+        self.assertEqual(
+            (font.role, font.slot, font.detected, font.format), ('body', 'regular', 'Acme Sans Regular', 'ttf'),
+        )
         # A font is put to use as soon as it is uploaded, while body text still had NetBox's.
         self.assertEqual(Theme.objects.get().typography['body_family'], 'uploaded')
         page = self.client.get(reverse('home'))
